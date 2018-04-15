@@ -1,0 +1,87 @@
+package com.tfg.Extraccion;
+
+public class PdfMetaData {
+	private Integer numberOfPages; 
+	private String title; 
+	private String author; 
+	private String subject; 
+	private String keywords; 
+	private String creator; 
+	private String producer; 
+	private String creationDate; 
+	private String modificationDate;
+	private String trapped;
+	public PdfMetaData() {
+		this.title = ""; 
+		this.author = ""; 
+		this.subject = ""; 
+		this.keywords = ""; 
+		this.creator = ""; 
+		this.producer = ""; 
+		this.creationDate = ""; 
+		this.modificationDate = "";
+		this.trapped = "";
+	}
+	public Integer getNumberOfPages() {
+		return numberOfPages;
+	}
+	public void setNumberOfPages(Integer numberOfPages) {
+		this.numberOfPages = numberOfPages;
+	}
+	public String getTitle() {
+		return title;
+	}
+	public void setTitle(String title) {
+		this.title = title;
+	}
+	public String getAuthor() {
+		return author;
+	}
+	public void setAuthor(String author) {
+		this.author = author;
+	}
+	public String getSubject() {
+		return subject;
+	}
+	public void setSubject(String subject) {
+		this.subject = subject;
+	}
+	public String getKeywords() {
+		return keywords;
+	}
+	public void setKeywords(String keywords) {
+		this.keywords = keywords;
+	}
+	public String getCreator() {
+		return creator;
+	}
+	public void setCreator(String creator) {
+		this.creator = creator;
+	}
+	public String getProducer() {
+		return producer;
+	}
+	public void setProducer(String producer) {
+		this.producer = producer;
+	}
+	public String getCreationDate() {
+		return creationDate;
+	}
+	public void setCreationDate(String creationDate) {
+		this.creationDate = creationDate;
+	}
+	public String getModificationDate() {
+		return modificationDate;
+	}
+	public void setModificationDate(String modificationDate) {
+		this.modificationDate = modificationDate;
+	}
+	public String getTrapped() {
+		return trapped;
+	}
+	public void setTrapped(String trapped) {
+		this.trapped = trapped;
+	}
+	
+	
+}

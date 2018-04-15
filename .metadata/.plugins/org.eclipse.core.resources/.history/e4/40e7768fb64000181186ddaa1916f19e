@@ -1,0 +1,6 @@
+package com.tfg.Extraccion;
+
+public class PdfBookMarks {
+	public String nobmre;
+	public List<PdfBookMarks> hijos;
+}

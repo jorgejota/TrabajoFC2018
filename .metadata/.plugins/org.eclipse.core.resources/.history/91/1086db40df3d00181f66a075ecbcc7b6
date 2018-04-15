@@ -1,0 +1,16 @@
+package zenododb;
+
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+
+import com.google.gson.JsonObject;
+
+public class PPPP {
+	public static void main(String[] args) {
+		JsonObject obj = new JsonObject();
+		obj.addProperty("hola", "amigos");
+		obj.addProperty("estoes", "uncnala");
+		JsonObject mainObj = new JsonObject();
+		mainObj.add("miPropiedad", obj);
+	}
+}

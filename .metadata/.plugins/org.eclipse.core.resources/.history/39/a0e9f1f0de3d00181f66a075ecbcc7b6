@@ -1,0 +1,18 @@
+package zenododb;
+
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+
+public class PPPP {
+	public static void main(String[] args) {
+		JSONObject objmain = new JSONObject();
+		JSONObject obj = new JSONObject();
+		obj.put("hola", "adios");
+		JSONArray list = new JSONArray();
+		list.add("Java");
+		list.add("Python");
+		obj.put("lista", list);
+		objmain.put("jeje", obj);
+		System.out.println(objmain);
+	}
+}

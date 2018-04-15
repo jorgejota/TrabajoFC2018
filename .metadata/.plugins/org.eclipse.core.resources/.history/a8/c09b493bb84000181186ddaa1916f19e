@@ -1,0 +1,31 @@
+package com.tfg.Extraccion;
+
+import java.util.List;
+
+public class PdfBookMarks {
+	private String titulo;
+	private String texto;
+	private List<PdfBookMarks> hijos;
+	public PdfBookMarks() {
+		
+	}
+	public String getTitulo() {
+		return titulo;
+	}
+	public void setTitulo(String titulo) {
+		this.titulo = titulo;
+	}
+	public String getTexto() {
+		return texto;
+	}
+	public void setTexto(String texto) {
+		this.texto = texto;
+	}
+	public List<PdfBookMarks> getHijos() {
+		return hijos;
+	}
+	public void setHijos(List<PdfBookMarks> hijos) {
+		this.hijos = hijos;
+	}
+	
+}

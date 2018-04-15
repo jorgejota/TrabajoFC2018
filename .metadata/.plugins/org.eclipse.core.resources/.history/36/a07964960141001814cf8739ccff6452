@@ -1,0 +1,25 @@
+package com.tfg.Extraccion;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+public class PPPKKK {
+	public static void main(String[] args) throws IOException {
+		String content;
+		content = new String(Files.readAllBytes(Paths.get("sample.txt")));
+		Pattern che1 = Pattern.compile("window.map0Div = \\{(.*?)\\}",Pattern.DOTALL);
+		Matcher reg1 = che1.matcher(content);
+		if(reg1.find()) {
+			Pattern che2 = Pattern.compile("lat: (.*?),\\nlng: (.*?),");
+			Matcher reg2 = che2.matcher(reg1.group());
+			if(reg2.find()) {
+				coordenadas.setLatitud(Double.parseDouble(reg2.group(1)));
+				coordenadas.setLongitud(Double.parseDouble(reg2.group(2)));
+				meter.setCoordinate(coordenadas);
+			}
+		}
+	}
+}

@@ -1,0 +1,6 @@
+eclipse.m2.WorkspacelifecycleMappingsLocation=C\:/Users/jorge/Desktop/WorkSpace-Eclipse/.metadata/.plugins/org.eclipse.m2e.core/lifecycle-mapping-metadata.xml
+eclipse.m2.defaultRuntime=Tomcat 9.0
+eclipse.m2.runtimes=Tomcat 9.0
+eclipse.m2.runtimesNodes/Tomcat\ 9.0/location=C\:\\Program Files\\Apache Software Foundation\\apache-maven-3.5.2
+eclipse.m2.runtimesNodes/Tomcat\ 9.0/type=EXTERNAL
+eclipse.preferences.version=1

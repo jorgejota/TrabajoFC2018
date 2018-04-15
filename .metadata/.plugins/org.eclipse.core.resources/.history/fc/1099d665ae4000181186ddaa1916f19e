@@ -1,0 +1,14 @@
+package com.tfg.Extraccion;
+
+public class PdfMetaData {
+	private Integer NumberOfPages; 
+	private String Title; 
+	private String Author; 
+	private String Subject; 
+	private String Keywords; 
+	private String Creator; 
+	private String Producer; 
+	private String CreationDate; 
+	private String ModificationDate;
+	private String Trapped;
+}

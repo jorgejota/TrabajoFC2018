@@ -1,0 +1,12 @@
+127.0.0.1 - - [10/Apr/2018:18:43:33 +0200] "GET / HTTP/1.1" 404 993
+0:0:0:0:0:0:0:1 - - [10/Apr/2018:18:43:35 +0200] "GET /HWorld/VistaJSP.jsp HTTP/1.1" 200 268
+127.0.0.1 - - [10/Apr/2018:18:45:04 +0200] "GET / HTTP/1.1" 404 993
+0:0:0:0:0:0:0:1 - - [10/Apr/2018:18:45:05 +0200] "GET /HWorld/WEB-INF/classes/com/prueba/zenodo/ApplicationZenodo.java HTTP/1.1" 404 966
+127.0.0.1 - - [10/Apr/2018:18:45:37 +0200] "GET / HTTP/1.1" 404 993
+0:0:0:0:0:0:0:1 - - [10/Apr/2018:18:45:38 +0200] "GET /HWorld/WEB-INF/classes/com/prueba/zenodo/ApplicationZenodo.java HTTP/1.1" 404 966
+127.0.0.1 - - [10/Apr/2018:19:01:37 +0200] "GET / HTTP/1.1" 404 993
+0:0:0:0:0:0:0:1 - - [10/Apr/2018:19:01:39 +0200] "GET /HWorld/VistaJSP.jsp HTTP/1.1" 200 276
+127.0.0.1 - - [10/Apr/2018:19:10:18 +0200] "GET / HTTP/1.1" 404 993
+0:0:0:0:0:0:0:1 - - [10/Apr/2018:19:10:19 +0200] "GET /HWorld/VistaJSP.jsp HTTP/1.1" 200 276
+127.0.0.1 - - [10/Apr/2018:19:13:58 +0200] "GET / HTTP/1.1" 404 993
+0:0:0:0:0:0:0:1 - - [10/Apr/2018:19:13:59 +0200] "GET /HWorld/VistaJSP.jsp HTTP/1.1" 200 286

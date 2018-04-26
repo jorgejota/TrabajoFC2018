@@ -2,10 +2,12 @@
 <section name="Workbench">
 	<section name="MavenProjectWizardArtifactPage">
 		<list key="groupId">
+			<item value="com.tfg"/>
 		</list>
 		<list key="name">
 		</list>
 		<list key="artifactId">
+			<item value="WebStraction"/>
 		</list>
 		<list key="projectNameTemplate">
 			<item value="[artifactId]"/>
@@ -71,6 +73,8 @@
 	</section>
 	<section name="MavenProjectWizardLocationPage">
 		<list key="location">
+			<item value="C:\Users\jorge\Desktop\TrabajoFC\WorkSpace-Eclipse\1-Crawler"/>
+			<item value="C:\Users\jorge\Desktop\TrabajoFC\WorkSpace-Eclipse\2-PdfExtraction\src\main\java\com\tfg\apachepoi\MiNuevaPrueba.java"/>
 		</list>
 		<list key="projectNameTemplate">
 			<item value="[artifactId]"/>
@@ -83,13 +87,10 @@
 	</section>
 	<section name="Maven2ProjectWizardArchifactPage">
 		<list key="package">
-			<item value="com.tfg.Extraccion"/>
 		</list>
 		<list key="groupId">
-			<item value="com.tfg"/>
 		</list>
 		<list key="artifactId">
-			<item value="2Extraccion"/>
 		</list>
 		<list key="projectNameTemplate">
 			<item value="[artifactId]"/>

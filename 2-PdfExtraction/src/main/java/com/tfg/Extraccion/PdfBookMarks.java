@@ -1,7 +1,6 @@
 package com.tfg.Extraccion;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class PdfBookMarks {
 	private String titulo;

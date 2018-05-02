@@ -6,16 +6,12 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
-
 import javax.imageio.ImageIO;
 import javax.xml.parsers.ParserConfigurationException;
-
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
@@ -32,45 +28,39 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
-
 import com.google.gson.JsonObject;
 import com.opencsv.CSVWriter;
 
 import technology.tabula.CommandLineApp;
 
 public class ReadPDF {
-	private static PDDocument document;
-	private static PDPageTree myPageTree;
-	public static JsonObject objMain;
-	public static String myRuta;
-	public static String titulo;
-	public static String source;
-	public static File file;
-	public static ExtractionMode mode; 
-	public static int[] miLista;
+	private PDDocument document;
+	private PDPageTree myPageTree;
+	public JsonObject objMain;
+	public String myRuta;
+	public File file;
+	public ExtractionMode mode; 
+	public int[] miLista;
 	
-	public ReadPDF(String myRuta, File file, ExtractionMode mode) {
-		this.myRuta = myRuta;
+	public ReadPDF(File file, ExtractionMode mode) {
 		this.file = file;
 		this.mode = mode;
 		this.miLista = null;
 	}
-	public ReadPDF(String myRuta, File file, ExtractionMode mode, int[] miLista) {
-		this.myRuta = myRuta;
+	public ReadPDF(File file, ExtractionMode mode, int[] miLista) {
 		this.file = file;
 		this.mode = mode;
 		this.miLista = miLista;
 	}
 	
-	public static void main(String args[]) throws InvalidPasswordException, IOException, ParserConfigurationException {
-
-		String fileName;
+	public void run() throws InvalidPasswordException, IOException, ParserConfigurationException {
+		
 		//Cargamos el PDF
-		titulo = titulo.substring(0, file.getName().length()-4);
 		document = PDDocument.load(file);
 		myPageTree = document.getPages();
-
+		
 		//Creaccion de la carpeta 
+		myRuta = file.getAbsolutePath().substring(0,file.getAbsolutePath().length()-4);
 		myRuta = crearCarpeta();
 
 		//Extraemos los metadatos
@@ -101,11 +91,10 @@ public class ReadPDF {
 		} catch (Exception e1) {
 			e1.printStackTrace();
 		}
-
-		document.close();
+		return;
 	}
 
-	public static PdfBookMarks extraerHijos(PDOutlineItem item){
+	public PdfBookMarks extraerHijos(PDOutlineItem item){
 		PdfBookMarks aDevolver = new PdfBookMarks();
 		aDevolver.setTitulo(item.getTitle());
 		//Localizacion de texto
@@ -126,8 +115,8 @@ public class ReadPDF {
 		return aDevolver;
 	}
 
-	public static String crearCarpeta() {
-		String nuevaRuta = myRuta + titulo + "-resultados";
+	public String crearCarpeta() {
+		String nuevaRuta = myRuta + "-resultados";
 		int i = 1;
 		String intentar = nuevaRuta;
 		while(!(new File(intentar)).mkdirs()) {
@@ -138,7 +127,7 @@ public class ReadPDF {
 	}
 
 	//Para quitarte footer y header
-	public static void textoLocalizado(PDPage pagee) {
+	public void textoLocalizado(PDPage pagee) {
 		Rectangle2D region = new Rectangle2D.Double(0f, 0f, 595f, 757.8f);
 		System.out.println(pagee.toString());
 		//Aplicar operacion para reducir entre un 5 y un 10%
@@ -160,29 +149,29 @@ public class ReadPDF {
 		}
 	}
 
-	public static void extraerMetaDatos() {
+	public void extraerMetaDatos() {
 		objMain = new JsonObject();
 		String comprobacion;
 		PDDocumentInformation info = document.getDocumentInformation();
 		objMain.addProperty("NumberOfPages", document.getNumberOfPages());
-		comprobacion = info.getTitle()==null?info.getTitle():"";
+		comprobacion = info.getTitle()!=null?info.getTitle():"";
 		objMain.addProperty("Tittle", comprobacion);
-		comprobacion = info.getAuthor()==null?info.getAuthor():"";
+		comprobacion = info.getAuthor()!=null?info.getAuthor():"";
 		objMain.addProperty("Author", comprobacion);
-		comprobacion = info.getSubject()==null?info.getSubject():"";
+		comprobacion = info.getSubject()!=null?info.getSubject():"";
 		objMain.addProperty("Subject", comprobacion);
-		comprobacion = info.getKeywords()==null?info.getKeywords():"";
+		comprobacion = info.getKeywords()!=null?info.getKeywords():"";
 		objMain.addProperty("Keywords", comprobacion);
-		comprobacion = info.getCreator()==null?info.getCreator():"";
+		comprobacion = info.getCreator()!=null?info.getCreator():"";
 		objMain.addProperty("Creator", comprobacion);
-		comprobacion = info.getProducer()==null?info.getProducer():"";
+		comprobacion = info.getProducer()!=null?info.getProducer():"";
 		objMain.addProperty("Producer", comprobacion);
 		SimpleDateFormat formato = new SimpleDateFormat("yyyy-MM-dd");
-		comprobacion = info.getCreationDate()==null?formato.format(info.getCreationDate().getTime()):"";
+		comprobacion = info.getCreationDate()!=null?formato.format(info.getCreationDate().getTime()):"";
 		objMain.addProperty("CreationDate",comprobacion);
-		comprobacion = info.getModificationDate()==null?formato.format(info.getModificationDate().getTime()):"";
+		comprobacion = info.getModificationDate()!=null?formato.format(info.getModificationDate().getTime()):"";
 		objMain.addProperty("ModificationDate", comprobacion);
-		comprobacion = info.getTrapped()==null?info.getTrapped():"";
+		comprobacion = info.getTrapped()!=null?info.getTrapped():"";
 		objMain.addProperty("Trapped", comprobacion);
 		File jsonFile = new File(myRuta + "MetaDatos" + ".json");
 		try {
@@ -194,18 +183,18 @@ public class ReadPDF {
 		}
 	}
 
-	public static void extraerTexto() {
+	public void extraerTexto() {
 		PDFTextStripper pdfStripper;
 		try {
 			pdfStripper = new PDFTextStripper();
 			String text = pdfStripper.getText(document);
-			Files.write(Paths.get(myRuta + titulo + ".txt"), text.getBytes());
+			Files.write(Paths.get(myRuta + "Texto" + ".txt"), text.getBytes());
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 
-	public static void extraerImagenes() {
+	public void extraerImagenes() {
 		PDPageTree list = document.getPages();
 		new File(myRuta + "Images").mkdirs();
 		int i = 1;
@@ -226,13 +215,13 @@ public class ReadPDF {
 		}
 	}
 
-	public static void extraerTabla() throws IOException, ParseException{
+	public void extraerTabla() throws IOException, ParseException{
 		File writeJson = new File(myRuta + "InfoTablas.json");
 		//-l lattice // -t stream
 		try (ExitCodeCaptor exitCodeCaptor = new ExitCodeCaptor()) {
 			exitCodeCaptor.run(() -> {
 				CommandLineApp.main(new String[]{"--pages", "all", "-f", "JSON", "-l", "-g", "-o",
-						writeJson.getAbsolutePath(), source});
+						writeJson.getAbsolutePath(), file.getAbsolutePath()});
 			});
 			if (exitCodeCaptor.getStatus() != 0)
 				throw new IOException("Failed PDF convert with error code " + exitCodeCaptor.getStatus());
@@ -268,7 +257,7 @@ public class ReadPDF {
 		}
 	}
 	
-	public static void extraerBookMarks() {
+	public void extraerBookMarks() {
 		ArrayList<PdfBookMarks> myBookMarks;
 		myBookMarks = new ArrayList<PdfBookMarks>();
 		PDDocumentOutline root =  document.getDocumentCatalog().getDocumentOutline();
@@ -285,9 +274,5 @@ public class ReadPDF {
 			//Aqui lo puedes hacer por 1/I/...
 			//Mira esto a ver si lo entiendes luego: https://stackoverflow.com/questions/44982486/how-to-select-pdf-page-using-bookmark-in-pdf-box
 		}
-	}
-
-	public enum ExtractionMode {
-		BOOKMARK, PAGES, COMPLETE
 	}
 }

@@ -59,7 +59,7 @@ public class ApplicationZenodo {
 		caps.setCapability("takesScreenshot", true);
 		caps.setCapability("screen-resolution", "1280x1024");
 		caps.setCapability("phantomjs.page.settings.userAgent", "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36");
-		caps.setCapability(PhantomJSDriverService.PHANTOMJS_EXECUTABLE_PATH_PROPERTY, "phantomjs.exe");
+		caps.setCapability(PhantomJSDriverService.PHANTOMJS_EXECUTABLE_PATH_PROPERTY, "src/main/resources/phantomjs.exe");
 		ArrayList<String> cliArgsCap = new ArrayList<String>();
 		cliArgsCap.add("--webdriver-loglevel=NONE");
 		caps.setCapability(PhantomJSDriverService.PHANTOMJS_CLI_ARGS, cliArgsCap);

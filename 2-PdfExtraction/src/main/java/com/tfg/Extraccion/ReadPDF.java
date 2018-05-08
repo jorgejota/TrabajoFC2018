@@ -8,8 +8,12 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.imageio.ImageIO;
 import javax.xml.parsers.ParserConfigurationException;
 import org.apache.pdfbox.cos.COSName;
@@ -27,8 +31,8 @@ import org.apache.pdfbox.text.PDFTextStripperByArea;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 import com.google.gson.JsonObject;
+import com.opencsv.CSVReader;
 import com.opencsv.CSVWriter;
 
 import technology.tabula.CommandLineApp;
@@ -40,27 +44,30 @@ public class ReadPDF {
 	public String myRuta;
 	public File file;
 	public ExtractionMode mode; 
-	public int[] miLista;
+	public List<Integer> miLista;
+	public String textoPrincipalDelPDF;
+	public boolean fixText;
+	public File carpetaOut;
 	
-	public ReadPDF(File file, ExtractionMode mode) {
-		this.file = file;
-		this.mode = mode;
-		this.miLista = null;
-	}
-	public ReadPDF(File file, ExtractionMode mode, int[] miLista) {
+	public ReadPDF(File file, ExtractionMode mode, List<Integer> miLista, boolean fixText, File carpetaOut) {
 		this.file = file;
 		this.mode = mode;
 		this.miLista = miLista;
+		this.fixText = fixText;
+		this.carpetaOut = carpetaOut;
 	}
-	
+
 	public void run() throws InvalidPasswordException, IOException, ParserConfigurationException {
-		
 		//Cargamos el PDF
 		document = PDDocument.load(file);
 		myPageTree = document.getPages();
-		
+
 		//Creaccion de la carpeta 
+		if(carpetaOut == null) {
 		myRuta = file.getAbsolutePath().substring(0,file.getAbsolutePath().length()-4);
+		}else {
+			myRuta = carpetaOut.getAbsolutePath() + "\\" + file.getName().substring(0,file.getName().length()-4);
+		}
 		myRuta = crearCarpeta();
 
 		//Extraemos los metadatos
@@ -68,7 +75,6 @@ public class ReadPDF {
 
 		//Extraer Imagenes
 		extraerImagenes();
-
 
 		switch (mode) {
 		case BOOKMARK:
@@ -91,9 +97,18 @@ public class ReadPDF {
 		} catch (Exception e1) {
 			e1.printStackTrace();
 		}
+		//System.out.println(textoPrincipalDelPDF);
+		imprimirTexto();
 		return;
 	}
 
+	public void imprimirTexto() {
+		try {
+			Files.write(Paths.get(myRuta + "Texto" + ".txt"), textoPrincipalDelPDF.getBytes());
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 	public PdfBookMarks extraerHijos(PDOutlineItem item){
 		PdfBookMarks aDevolver = new PdfBookMarks();
 		aDevolver.setTitulo(item.getTitle());
@@ -188,10 +203,31 @@ public class ReadPDF {
 		try {
 			pdfStripper = new PDFTextStripper();
 			String text = pdfStripper.getText(document);
-			Files.write(Paths.get(myRuta + "Texto" + ".txt"), text.getBytes());
-		} catch (IOException e) {
+			if(fixText) {
+				Pattern pattern = Pattern.compile("(\\S+)\\s*-\\s*\\n(\\S+)",Pattern.MULTILINE);
+				Matcher matcher = pattern.matcher(text);
+				while(matcher.find()) {
+					//https://stackoverflow.com/questions/5357460/python-regex-matching-a-parenthesis-within-parenthesis?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa
+					String firstS = matcher.group(1);
+					String secondS = matcher.group(2);
+					String sustitucion = firstS + secondS + "\n";
+					firstS = fixearString(firstS);
+					secondS = fixearString(secondS);
+					text = text.replaceAll(firstS+"\\s*-\\s*\\n"+secondS+"\\s", sustitucion);
+				}
+			}
+			textoPrincipalDelPDF = text;
+		} catch (IOException |  java.util.regex.PatternSyntaxException e) {
 			e.printStackTrace();
-		}
+			return;
+		} 
+	}
+
+	public static String fixearString(String aRempladar) {
+		String xx = aRempladar;
+		xx = xx.replace("(", "\\(").replace("[", "\\[").replace("{", "\\{").replace(".", "\\.").replace(":", "\\:").
+				replace(")", "\\)").replace("]", "\\]").replace("}", "\\}").replace(",", "\\,")	.replace(";", "\\;");
+		return xx;
 	}
 
 	public void extraerImagenes() {
@@ -203,7 +239,11 @@ public class ReadPDF {
 			for (COSName c : pdResources.getXObjectNames()) {
 				try {
 					PDXObject o = pdResources.getXObject(c);
+					//					COSStream stream = o.getCOSObject();
 					if (o instanceof org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject) {
+						//						PDFormXObject pdxObjectForm = new PDFormXObject(stream);
+						//						System.out.println("Nos interesa" + pdxObjectForm.getBBox().getLowerLeftY());
+						//					    System.out.println("Nos da igual" + pdxObjectForm.getBBox().getUpperRightY());
 						File fileee = new File(myRuta + "Images\\" + "Imagen" + i + ".png");
 						i++;
 						ImageIO.write(((org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject)o).getImage(), "png", fileee);
@@ -215,7 +255,7 @@ public class ReadPDF {
 		}
 	}
 
-	public void extraerTabla() throws IOException, ParseException{
+	public void extraerTabla() throws IOException, ParseException, org.json.simple.parser.ParseException{
 		File writeJson = new File(myRuta + "InfoTablas.json");
 		//-l lattice // -t stream
 		try (ExitCodeCaptor exitCodeCaptor = new ExitCodeCaptor()) {
@@ -230,33 +270,90 @@ public class ReadPDF {
 		new File(myRuta + "tablas").mkdirs();
 		JSONParser parser = new JSONParser();
 		JSONArray a = (JSONArray) parser.parse(new FileReader(writeJson));
-		CSVWriter csvWriter;
-		int i = 0;
-		for (Object obj1 : a){
-			csvWriter = new CSVWriter(new FileWriter(aEscribir + "\\Tabla_" + i + ".csv"));
-			JSONObject objetoAuxiliar = (JSONObject) obj1;
-			JSONArray dataArray = (JSONArray) objetoAuxiliar.get("data");
-			int filas = 0;
-			int columnas = 0;
-			for (Object obj2 : dataArray){
-				filas++;
-				ArrayList<String> aMeter = new ArrayList<>();
-				for (Object obj3 : (JSONArray) obj2){
-					JSONObject resultadoFinal = (JSONObject) obj3;
-					String miResultado = (String) resultadoFinal.get("text");
-					aMeter.add(miResultado);
+		if(fixText) {
+			CSVWriter csvWriter;
+			int i = 0;
+			for (Object obj1 : a){
+				String rutaDelCSV = aEscribir + "\\Tabla_" + i + ".csv";
+				File esoEsribir = new File(rutaDelCSV);
+				csvWriter = new CSVWriter(new FileWriter(esoEsribir));
+				JSONObject objetoAuxiliar = (JSONObject) obj1;
+				JSONArray dataArray = (JSONArray) objetoAuxiliar.get("data");
+				int filas = 0;
+				int columnas = 0;
+				for (Object obj2 : dataArray){
+					filas++;
+					ArrayList<String> aMeter = new ArrayList<>();
+					for (Object obj3 : (JSONArray) obj2){
+						JSONObject resultadoFinal = (JSONObject) obj3;
+						String miResultado = (String) resultadoFinal.get("text");
+						aMeter.add(miResultado);
+					}
+					csvWriter.writeNext(aMeter.toArray(new String[aMeter.size()]));
 				}
-				csvWriter.writeNext(aMeter.toArray(new String[aMeter.size()]));
+				csvWriter.close();
+				if((filas == 0 || filas == 1) || (columnas == 0 || columnas == 1)) {
+					File aBorrar = new File(rutaDelCSV);
+					aBorrar.delete();
+				}
+				else {
+					try {
+						sacarDelTexto(aEscribir, rutaDelCSV);
+					}catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+				i++;
 			}
-			csvWriter.close();
-			if(filas == 1 && columnas == 1) {
-				File aBorrar = new File(aEscribir + "\\Tabla_" + i + ".csv");
-				aBorrar.delete();
-			}
-			i++;
 		}
 	}
-	
+
+	public void sacarDelTexto(String aEscribir, String rutaCSV) throws IOException {
+		CSVReader reader = new CSVReader(new FileReader(rutaCSV));
+		String[] nextLine;
+		String myFinalString = ""; 
+		while ((nextLine = reader.readNext()) != null) {
+			List<String[]> auxiliarString = new ArrayList<>();
+			for (String string : nextLine) {
+				auxiliarString.add(string.split("\n"));
+			}
+			for (int j = 0; j < nextLine[0].split("\n").length; j++) {
+				for (String[] strings : auxiliarString) {
+					try {
+						String stringDeMeter = fixearString(strings[j]);
+						myFinalString += stringDeMeter + "\\s*";
+					}catch(java.lang.ArrayIndexOutOfBoundsException e) {
+						continue;
+					}
+
+				}
+			}
+		}
+		reader.close();
+		//Comprobacion de que un String sea vacio
+		if(myFinalString.contains("[\\\\s*]+")) {
+			File aBorrar = new File(rutaCSV);
+			aBorrar.delete();
+			return;
+		}
+		String aIntentar = myFinalString + "(Table .*?)\\n";
+		System.out.println(aIntentar);
+		Pattern asdada = Pattern.compile(aIntentar,Pattern.DOTALL);
+		Matcher mimaccher = asdada.matcher(textoPrincipalDelPDF); 
+		if(mimaccher.find()) {
+			String miTexto = mimaccher.group(1);
+			textoPrincipalDelPDF = textoPrincipalDelPDF.replaceAll(miTexto, "");
+			miTexto = miTexto.replaceAll("\r", "");
+			File aBorrar = new File(rutaCSV);
+			File fileRemplace2 = new File(aEscribir + "\\" + miTexto + ".csv");
+			if (aBorrar.renameTo(fileRemplace2))
+				aBorrar.delete();
+			else
+				System.out.println("No se ha podido remplazar el nombre " + rutaCSV + " por " + fileRemplace2);
+		}
+		textoPrincipalDelPDF = textoPrincipalDelPDF .replaceAll(myFinalString, "");
+	}
+
 	public void extraerBookMarks() {
 		ArrayList<PdfBookMarks> myBookMarks;
 		myBookMarks = new ArrayList<PdfBookMarks>();

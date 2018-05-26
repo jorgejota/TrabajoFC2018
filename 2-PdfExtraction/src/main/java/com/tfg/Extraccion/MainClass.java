@@ -4,7 +4,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.xml.parsers.ParserConfigurationException;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -12,6 +14,8 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+
+import com.tfg.librairy.LibrairyConnection;
 
 public class MainClass {
 
@@ -54,7 +58,7 @@ public class MainClass {
 			}
 			for (File file : misPDF) {
 				try {
-					new ReadPDF(file, modoExtraccion,numeros,fixText,outputfolder).run();
+					new ReadPDF(file,modoExtraccion,numeros,fixText,outputfolder).run();
 				} catch (IOException | ParserConfigurationException e) {
 					e.printStackTrace();
 				}

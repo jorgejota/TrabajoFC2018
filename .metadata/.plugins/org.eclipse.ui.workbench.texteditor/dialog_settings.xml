@@ -2,27 +2,20 @@
 <section name="Workbench">
 	<section name="org.eclipse.ui.texteditor.FindReplaceDialog">
 		<item value="false" key="isRegEx"/>
-		<item value="comprobacionArchivo" key="selection"/>
+		<item value="dependencies" key="selection"/>
 		<item value="false" key="casesensitive"/>
 		<item value="false" key="incremental"/>
 		<item value="true" key="wrap"/>
 		<item value="false" key="wholeword"/>
 		<list key="findhistory">
-			<item value="comprobacionArchivo"/>
-			<item value="printhelp"/>
-			<item value="commons-cli"/>
-			<item value="apache.commons.cli"/>
-			<item value="The folder doesn´t contains a PDF."/>
-			<item value="format"/>
-			<item value="Copyright is a significant component of intellectual property law"/>
-			<item value="exitcode"/>
-			<item value="rights under the EU are created automatically, vested in the employers of creators (when the"/>
-			<item value="No se ha podido remplazar el nombre"/>
-			<item value="Table 3. Confusion Matrix"/>
-			<item value="table"/>
-			<item value="Pattern"/>
-			<item value="extraerTexto"/>
-			<item value="VAMONOSSSSSSSSIUUU"/>
+			<item value="system.exi"/>
+			<item value="system.ou"/>
+			<item value="descargarObjeto"/>
+			<item value="encuentro"/>
+			<item value="files"/>
+			<item value="https://zenodo.org/record/1108845"/>
+			<item value="email"/>
+			<item value="avanzar"/>
 		</list>
 		<list key="replacehistory">
 			<item value=""/>

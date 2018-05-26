@@ -40,14 +40,15 @@ import technology.tabula.CommandLineApp;
 public class ReadPDF {
 	private PDDocument document;
 	private PDPageTree myPageTree;
-	public JsonObject objMain;
-	public String myRuta;
-	public File file;
-	public ExtractionMode mode; 
-	public List<Integer> miLista;
-	public String textoPrincipalDelPDF;
-	public boolean fixText;
-	public File carpetaOut;
+	private JsonObject objMain;
+	private String myRuta;
+	private File file;
+	private ExtractionMode mode; 
+	private List<Integer> miLista;
+	private String textoPrincipalDelPDF;
+	private boolean fixText;
+	private File carpetaOut;
+	private boolean onlyText;
 	
 	public ReadPDF(File file, ExtractionMode mode, List<Integer> miLista, boolean fixText, File carpetaOut) {
 		this.file = file;
@@ -56,8 +57,16 @@ public class ReadPDF {
 		this.fixText = fixText;
 		this.carpetaOut = carpetaOut;
 	}
+	public ReadPDF(File file, ExtractionMode mode, List<Integer> miLista, boolean fixText, File carpetaOut, boolean onlyText) {
+		this.file = file;
+		this.mode = mode;
+		this.miLista = miLista;
+		this.fixText = fixText;
+		this.carpetaOut = carpetaOut;
+		this.onlyText = onlyText;
+	}
 
-	public void run() throws InvalidPasswordException, IOException, ParserConfigurationException {
+	public String run() throws InvalidPasswordException, IOException, ParserConfigurationException {
 		//Cargamos el PDF
 		document = PDDocument.load(file);
 		myPageTree = document.getPages();
@@ -67,6 +76,10 @@ public class ReadPDF {
 		myRuta = file.getAbsolutePath().substring(0,file.getAbsolutePath().length()-4);
 		}else {
 			myRuta = carpetaOut.getAbsolutePath() + "\\" + file.getName().substring(0,file.getName().length()-4);
+		}
+		if(onlyText) {
+			extraerTexto();
+			return textoPrincipalDelPDF;
 		}
 		myRuta = crearCarpeta();
 
@@ -99,7 +112,7 @@ public class ReadPDF {
 		}
 		//System.out.println(textoPrincipalDelPDF);
 		imprimirTexto();
-		return;
+		return textoPrincipalDelPDF;
 	}
 
 	public void imprimirTexto() {
@@ -219,6 +232,7 @@ public class ReadPDF {
 			textoPrincipalDelPDF = text;
 		} catch (IOException |  java.util.regex.PatternSyntaxException e) {
 			e.printStackTrace();
+			textoPrincipalDelPDF = "";
 			return;
 		} 
 	}

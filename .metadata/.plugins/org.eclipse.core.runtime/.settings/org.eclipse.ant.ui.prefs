@@ -5,3 +5,6 @@ org.eclipse.ant.ui.dtdColor=0,0,0
 org.eclipse.ant.ui.processingInstructionsColor=0,0,0
 org.eclipse.ant.ui.tagsColor=0,0,0
 org.eclipse.ant.ui.textColor=0,0,0
+overriddenByCSS=,org.eclipse.ant.ui.processingInstructionsColor,org.eclipse.ant.ui.constantStringsColor,org.eclipse.ant.ui.commentsColor,org.eclipse.ant.ui.dtdColor,org.eclipse.ant.ui.textColor,org.eclipse.ant.ui.tagsColor,
+useAnnotationsPrefPage=true
+useQuickDiffPrefPage=true

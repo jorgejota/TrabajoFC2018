@@ -1,30 +1,25 @@
 package alandb;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.net.URLConnection;
 import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.select.Elements;
+import java.util.Map;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.phantomjs.PhantomJSDriver;
-import org.openqa.selenium.phantomjs.PhantomJSDriverService;
-import org.openqa.selenium.remote.DesiredCapabilities;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
@@ -32,10 +27,17 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 public class Application {
+	public Application(String nombreDirectorio, String keyWords, boolean allJoin) {
+		this.nombreDirectorio = nombreDirectorio;
+		this.palabraBuscar = keyWords;
+		this.allJoin = allJoin;
+	}
 	public Application(String nombreDirectorio, String keyWords) {
 		this.nombreDirectorio = nombreDirectorio;
 		this.palabraBuscar = keyWords;
+		this.allJoin = false;
 	}
+
 	public JsonObject objMain;
 	public Integer numero = 0;
 	public List<Integer> aDesargar = new ArrayList<Integer>();
@@ -43,18 +45,31 @@ public class Application {
 	public Integer extraccionActual; 
 	public String nombreDirectorio;
 	public String palabraBuscar = "contamination";
+	public boolean allJoin;
+	public File previousFile;
+	public List<String> previousLinks;
 
 	public void run() {
 		objMain = new JsonObject();
-		//System.setProperty("webdriver.chrome.driver", "src/main/resources/chromedriver.exe");
+		loadPreviousDownloads();
+		System.setProperty("webdriver.chrome.driver", "src/main/resources/chromedriver.exe");
 		String url = "http://alandb.darksky.org/";
-		
-		/*ChromeOptions options = new ChromeOptions();
-        options.addArguments("--start-maximized");
-        options.addArguments("--disable-popup-blocking");
-        options.addArguments("--headless");
-		driver = new ChromeDriver();*/
-		DesiredCapabilities caps = new DesiredCapabilities();
+		ChromeOptions options = new ChromeOptions();
+		options.addArguments("--start-maximized");
+		options.addArguments("--disable-popup-blocking");
+		Map<String,Object> pref = new HashMap<>();
+		pref.put("download.default_directory", nombreDirectorio);
+		pref.put("browser.helperApps.neverAsk.saveToDisk", nombreDirectorio);
+		pref.put("download.directory_upgrade", true);
+		pref.put("download.prompt_for_download", false);
+		pref.put("safebrowsing.enabled", true);
+		pref.put("profile.default_content_settings.popups", 0);
+		pref.put("plugins.always_open_pdf_externally", true);
+		options.setExperimentalOption("prefs", pref);
+		//options.addArguments("--headless");
+		driver = new ChromeDriver(options);
+		//switches to new tab
+		/*DesiredCapabilities caps = new DesiredCapabilities();
 		caps.setJavascriptEnabled(true);
 		caps.setCapability("takesScreenshot", true);
 		caps.setCapability("screen-resolution", "1280x1024");
@@ -64,11 +79,14 @@ public class Application {
 		cliArgsCap.add("--webdriver-loglevel=NONE");
 		caps.setCapability(PhantomJSDriverService.PHANTOMJS_CLI_ARGS, cliArgsCap);
 		Logger.getLogger(PhantomJSDriverService.class.getName()).setLevel(Level.OFF);
-		driver = new PhantomJSDriver(caps);
+		driver = new PhantomJSDriver(caps);*/
 		driver.get(url);
+		//Abrimos una nueva pestaña para la descarga de pdf
+		((JavascriptExecutor)driver).executeScript("window.open()");
+		ArrayList<String> tabs = new ArrayList<String> (driver.getWindowHandles());
+		driver.switchTo().window(tabs.get(0)); 
 		driver.findElement(By.id("quickSearchName")).sendKeys(palabraBuscar);
 		driver.findElement(By.xpath("//div[@id='querySubmit']//input[@type='submit']")).click();
-		extraccionActual = 1;
 		boolean avanzamos = true;
 		while(avanzamos) {
 			waitJavaScript();
@@ -80,6 +98,63 @@ public class Application {
 		}
 		driver.close();
 	}
+
+	public void loadPreviousDownloads(){
+		previousFile = new File(nombreDirectorio + "\\DOWNLOADURLs.txt");
+		previousLinks = new ArrayList<>();
+		if(!previousFile.exists()) {
+			try {
+				previousFile.createNewFile();
+				extraccionActual = 1;
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		else {
+			try (BufferedReader br = new BufferedReader(new FileReader(previousFile))) {
+				String line;
+				while ((line = br.readLine()) != null) {
+					previousLinks.add(line);
+				}
+				extraccionActual = previousLinks.size() - 1;
+			} catch (FileNotFoundException e) {
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	public boolean comprobarRecorrido(String link) {
+		if(previousLinks.contains(link))
+			return false;
+		return true;
+	}
+
+	public boolean adescargarPdf(String urlPasada) {
+		ArrayList<String> tabs = new ArrayList<String>(driver.getWindowHandles());
+		driver.switchTo().window(tabs.get(1));
+		File directorioEnFile = new File(nombreDirectorio);
+		int previousLenght = directorioEnFile.listFiles().length;
+		try {
+			System.out.println("Pasamos la URL " + urlPasada);
+			driver.get(urlPasada);
+		}catch(org.openqa.selenium.WebDriverException e) {
+			System.out.println("Pues ha saltado");
+			return false;
+		}
+		try {
+			Thread.sleep(500);
+		} catch (InterruptedException e) {
+			Thread.interrupted();
+		}
+		driver.switchTo().window(tabs.get(0));
+		//Se ha descargado un nuevo PDF
+		if(directorioEnFile.listFiles().length > previousLenght) {
+			return true;
+		}
+		return false;
+	}
+
 	public HashMap<String,String> newURI() {
 		List<WebElement> elementos = driver.findElements(By.cssSelector("a[href^=\"show.php?record=\"]"));
 		HashMap<String,String> uris = new HashMap<String, String>();
@@ -97,42 +172,67 @@ public class Application {
 	public void extract(HashMap<String,String> uris){
 		waitJavaScript();
 		uris.forEach((k, v) -> {
-			driver.get(k);
-			JsonObject objson = new JsonObject();
-			String nombreCarpeta = crearCarpeta();
-			objson.addProperty("titulo", driver.findElement(By.cssSelector("td[class='mainfieldsbg'][colspan='3']")).getText());
-			objson.addProperty("abstractText", driver.findElement(By.cssSelector("td[class='otherfieldsbg'][colspan='5']")).getText());
-			objson.addProperty("year", Integer.parseInt(driver.findElement(By.cssSelector("a[href^=\"show.php?year=\"]")).getText()));
-			String[] authors = driver.findElement(By.cssSelector("td[class='mainfieldsbg'][colspan='5']")).getText().split(";");
-			JsonArray nuevaArr = new JsonArray();
-			for (String str: authors) {
-				nuevaArr.add(str);
-			}
-			objson.add("authors", nuevaArr);
-			String[] keyWords = authors = driver.findElement(By.cssSelector("td[class='mainfieldsbg'][colspan='5']")).getText().split(";");
-			nuevaArr = new JsonArray();
-			for (String str: keyWords) {
-				nuevaArr.add(str);
-			}
-			objson.add("keywords", nuevaArr);
-			File jsonFile = new File(nombreCarpeta + "\\MetaDatos" + extraccionActual +".json");
-			try {
-				BufferedWriter writer = new BufferedWriter(new FileWriter(jsonFile));
-				writer.write(objson.toString());
-				writer.close();
-			}catch (IOException e) {
-				e.printStackTrace();
-			}
-			objMain.add("Extraccion" + extraccionActual, objson);
-			extraccionActual++;
-			if(v != null) {
-				if(esPdf(v)) {
-					hacerPeticion(v, nombreCarpeta);
+			if(comprobarRecorrido(k)) {
+				driver.get(k);
+				JsonObject objson = new JsonObject();
+				String nombreCarpeta;
+				if(!allJoin)
+					nombreCarpeta = crearCarpeta("Extraccion");
+				else
+					nombreCarpeta = nombreDirectorio;
+				try {
+					objson.addProperty("titulo", driver.findElement(By.cssSelector("td[class='mainfieldsbg'][colspan='3']")).getText());
+				}catch(org.openqa.selenium.NoSuchElementException e) {}
+				System.out.println("    Comenzamos la extraccion " + extraccionActual + driver.findElement(By.cssSelector("td[class='mainfieldsbg'][colspan='3']")).getText());
+				try {
+					objson.addProperty("abstractText", driver.findElement(By.cssSelector("td[class='otherfieldsbg'][colspan='5']")).getText());
+				}catch(org.openqa.selenium.NoSuchElementException e) {}
+				try {
+					objson.addProperty("year", Integer.parseInt(driver.findElement(By.cssSelector("a[href^=\"show.php?year=\"]")).getText()));
+				}catch(org.openqa.selenium.NoSuchElementException e) {}
+				ArrayList<String> authors = new ArrayList<>();
+				try {
+					String[] resultadoAutor = driver.findElement(By.cssSelector("td[class='mainfieldsbg'][colspan='5']")).getText().split(";");
+					authors = new ArrayList<>(Arrays.asList(resultadoAutor));
+				}catch(org.openqa.selenium.NoSuchElementException e) {}
+				JsonArray nuevaArr = new JsonArray();
+				for (String str: authors) {
+					nuevaArr.add(str);
 				}
-				else {
-					driver.get(v);
-					tryExtract(nombreCarpeta);
+				objson.add("authors", nuevaArr);
+				ArrayList<String> keyWords = new ArrayList<>();
+				try {
+					String[] keyWordsResultado = driver.findElement(By.cssSelector("td[class='mainfieldsbg'][colspan='5']")).getText().split(";");
+					keyWords = new ArrayList<>(Arrays.asList(keyWordsResultado));
+				}catch(org.openqa.selenium.NoSuchElementException e) {}
+				nuevaArr = new JsonArray();
+				for (String str: keyWords) {
+					nuevaArr.add(str);
 				}
+				objson.add("keywords", nuevaArr);
+				File jsonFile = new File(nombreCarpeta + "\\MetaDatos" + extraccionActual +".json");
+				try {
+					BufferedWriter writer = new BufferedWriter(new FileWriter(jsonFile));
+					writer.write(objson.toString());
+					writer.close();
+				}catch (IOException e) {
+					e.printStackTrace();
+				}
+				objMain.add("Extraccion" + extraccionActual, objson);
+				if(v != null) {
+					if(!adescargarPdf(v)) {
+						driver.get(v);
+						tryExtract(nombreCarpeta);
+					}
+				}
+				extraccionActual++;
+				previousLinks.add(k);
+				try {
+					Files.write(previousFile.toPath(), (k + "\n").getBytes(), StandardOpenOption.APPEND);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				System.out.println();
 			}
 		});
 	}
@@ -145,143 +245,51 @@ public class Application {
 			return false;
 		}
 	}
+	public void accederAlMeta(String meta, String attribute) {
+
+	}
 	public void tryExtract(String nombreCarpeta) {
 		try {
-			Document doc = Jsoup.connect(driver.getCurrentUrl()).get();
-			Elements a = doc.select("meta[name=citation_pdf_url]");
-			if(a.size() != 0) {
-				if(hacerPeticion(a.get(0).attr("content"),nombreCarpeta))
-					return;
-			}
-			a = doc.select("a:contains(PDF)");
-			if(a.size() != 0) {
-				if(hacerPeticion(a.get(0).absUrl("href"),nombreCarpeta))
-					return;
-			}
-			a = doc.select("a:contains(DOWNLOAD)");
-			if(a.size() != 0) {
-				if(hacerPeticion(a.get(0).absUrl("href"),nombreCarpeta))
-					return;
-			}
-			try {
-				WebElement e = driver.findElement(By.xpath("//*[contains(text(),'pdf')]"));
-				String url = e.getAttribute("href");
-				if(url != null)
-					hacerPeticion(url,nombreCarpeta);
-			} catch( org.openqa.selenium.NoSuchElementException e) {
-
-			}
-			try {
-				WebElement e = driver.findElement(By.xpath("//*[contains(text(),'download')]"));
-				String url = e.getAttribute("href");
-				if(url != null)
-					hacerPeticion(url,nombreCarpeta);
-			} catch ( org.openqa.selenium.NoSuchElementException e) {
-
-			}
-		}catch( org.jsoup.HttpStatusException ex) {
-			System.out.println("La pagina " + driver.getCurrentUrl() + "\n ¡NO ADMITE ROBOTS!");
-		} catch (IOException e) {
-			e.printStackTrace();
+			System.out.println("Primer metodo");
+			WebElement uuu = driver.findElement(By.xpath("//meta[@name='citation_pdf_url']"));
+			adescargarPdf(uuu.getAttribute("content"));
+			return;
+		}catch( org.openqa.selenium.NoSuchElementException e) {
 		}
-	}
-	/**
-	 * TryExtract antiguo. El nuevo esta basado en algoritmo justificado.
-	 */
-	//	public void tryExtract() {
-	//		waitJavaScript();
-	//		List<WebElement> nuevo = new ArrayList<WebElement>();
-	//		try {
-	//			nuevo = driver.findElements(By.xpath("//a[contains(@href, 'pdf')]"));
-	//			for (WebElement webElement : nuevo) {
-	//				String uri = webElement.getAttribute("href");
-	//				System.out.println("Hemos obtenido el link: " + uri);
-	//				hacerPeticion(uri);
-	//			}	
-	//		}
-	//		//Bloque para hacer click
-	//		catch (org.openqa.selenium.NoSuchElementException e) {
-	//			System.out.println("Puede que haya un boton vamos a ver");
-	//			//Creo que no lanza excepcion, solo una lista vacia
-	//			List<WebElement> listElementClass = driver.findElements(By.xpath("//a[contains(@class, 'pdf')]"));
-	//			List<WebElement> listElementTittle = driver.findElements(By.xpath("//a[contains(@tittle, 'pdf')]"));
-	//			if(!change(listElementClass))
-	//				change(listElementTittle);
-	//		}
-	//		//Nuevo bloque donde hacer click -> Invalid URI
-	//		/*catch (org.openqa.selenium.WebDriverException e) {
-	//			nuevo.click();
-	//			String uriPdf = driver.getCurrentUrl();
-	//			hacerPeticion(uriPdf);
-	//		}*/
-	//		//Opcion para debuguear
-	//		catch (Exception e) {
-	//			System.out.println("Hay que tratar esta excepcion");
-	//			System.exit(0);
-	//		}
-	//	}
-
-	/**
-	 * En caso de que fuera necesario cambiar de pesta�a.
-	 * @param lista
-	 * @return
-	 */
-	//	public boolean change(List<WebElement> lista) {
-	//		boolean descargado = false;
-	//		String currentURI = driver.getCurrentUrl();
-	//		for (WebElement webElement : lista) {
-	//			webElement.click();
-	//			//Para dejar que cargue la pagina
-	//			waitJavaScript();
-	//			Set<String> winHandleBefore = driver.getWindowHandles();
-	//			if(winHandleBefore.size() > 1) {
-	//				String[] arrayString = winHandleBefore.toArray(new String[winHandleBefore.size()]);
-	//				driver.switchTo().window(arrayString[arrayString.length-1]);
-	//				String urii = driver.getCurrentUrl();
-	//				descargado = hacerPeticion(urii);
-	//				driver.close();
-	//				driver.switchTo().window(arrayString[0]);
-	//			}
-	//			else {
-	//				String urii = driver.getCurrentUrl();
-	//				descargado = hacerPeticion(urii);
-	//			}
-	//			if(descargado)
-	//				break;
-	//		}
-	//		return descargado;
-	//	}
-
-	public boolean hacerPeticion(String urlString, String nombreCarpeta) {
-		if(!esPdf(urlString))
-			return false;
-		URL url;
 		try {
-			url = new URL(urlString);
-			InputStream in = url.openStream();
-			Files.copy(in, Paths.get(nombreCarpeta + "\\Descarga" + extraccionActual + ".pdf"));
-			numero++;
-			in.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		return true;
-	}
-
-	public boolean esPdf(String urlString) {
-		URL url;
-		URLConnection u;
-		try {
-			url = new URL(urlString);
-			u = url.openConnection();
-			if(urlString == null || urlString.isEmpty() ||
-					(u.getHeaderField("Content-Type") != null && !u.getHeaderField("Content-Type").equals("application/pdf"))){
-				return false;
+			System.out.println("Segundo metodo");
+			WebElement e = driver.findElement(By.xpath("//*[contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'),'pdf')]"));		
+			String url = e.getAttribute("href");
+			if(url == null) {
+				if(e.getTagName().equals("i"))
+					url = e.findElement(By.xpath("..")).getAttribute("href");
+				if(e.getTagName().equals("span")) {
+					url = e.findElement(By.xpath("..")).findElement(By.xpath("..")).getAttribute("href");
+				}
 			}
-		} catch (IOException e) {
-			return false;
+			if(url != null) {
+				adescargarPdf(url);
+				return;
+			}
+		} catch( org.openqa.selenium.NoSuchElementException e) {
 		}
-		return true;
+		try {
+			System.out.println("Tercer metodo");
+			WebElement e = driver.findElement(By.xpath("//*[contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'),'download')]"));		
+			String url = e.getAttribute("href");
+			if(url == null) {
+				if(e.getTagName().equals("i"))
+					url = e.findElement(By.xpath("..")).getAttribute("href");
+				if(e.getTagName().equals("span")) {
+					url = e.findElement(By.xpath("..")).findElement(By.xpath("..")).getAttribute("href");
+				}
+			}
+			if(url != null) {
+				adescargarPdf(url);
+				return;
+			}
+		} catch ( org.openqa.selenium.NoSuchElementException e) {
+		}
 	}
 
 	public boolean waitJavaScript() {
@@ -306,8 +314,8 @@ public class Application {
 		return wait.until(jQuery) && wait.until(javaScript);
 	}
 
-	private String crearCarpeta() {
-		String nuevaRuta = this.nombreDirectorio + "\\" + "Extraccion" + this.extraccionActual;
+	private String crearCarpeta(String name) {
+		String nuevaRuta = this.nombreDirectorio + "\\" + name + this.extraccionActual;
 		int i = 1;
 		String intentar = nuevaRuta;
 		while(!(new File(intentar)).mkdirs()) {

@@ -67,7 +67,7 @@ public class Main {
 	public static Options buildOptions() {
 		Options o = new Options();
 		o.addOption("h", "help", false, "Indicate how yo use the program.");
-		o.addOption("f", "fix", false, "[EXPERIMENTAL] Force PDF to be extracted adjunting words, deleting files, deleting footers, .. By default, OFF");
+		//o.addOption("f", "fix", false, "[EXPERIMENTAL] Force PDF to be extracted adjunting words, deleting files, deleting footers, .. By default, OFF");
 		o.addOption(Option.builder("i")
 				.longOpt("input")
 				.desc("[REQUIRED] Input folder where download the content. Ex: /Users/jesus/aFolder")

@@ -1,9 +1,14 @@
+com\tfg\librairy\SendEmail.class
+com\tfg\librairy\EstoBorrar.class
 com\tfg\Extraccion\MainClass.class
-com\tfg\Extraccion\PdfBookMarks.class
-com\tfg\Extraccion\ExitCodeCaptor$1.class
 com\tfg\Extraccion\ExtractionMode.class
 com\tfg\Extraccion\ExitCodeCaptor$SecurityExceptionCheckExit.class
+com\tfg\librairy\LibrairyConnection.class
+com\tfg\Extraccion\PdfBookMarks.class
+com\tfg\Extraccion\ExitCodeCaptor$1.class
+com\tfg\ckan\CkanConnection.class
 com\tfg\Extraccion\ReadPDF.class
-com\tfg\Extraccion\MisPruebas.class
+com\tfg\librairy\SendEmail$1.class
+hello\Application.class
 com\tfg\Extraccion\ReadPDF$1.class
 com\tfg\Extraccion\ExitCodeCaptor.class

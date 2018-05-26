@@ -10,8 +10,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -21,9 +21,8 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.phantomjs.PhantomJSDriver;
-import org.openqa.selenium.phantomjs.PhantomJSDriverService;
-import org.openqa.selenium.remote.DesiredCapabilities;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
@@ -31,9 +30,15 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 public class ApplicationZenodo {
+	public ApplicationZenodo(String nombreDirectorio, String keyWords, boolean allJoin) {
+		this.nombreDirectorio = nombreDirectorio;
+		this.palabraBuscar = keyWords;
+		this.allJoin = allJoin;
+	}
 	public ApplicationZenodo(String nombreDirectorio, String keyWords) {
 		this.nombreDirectorio = nombreDirectorio;
 		this.palabraBuscar = keyWords;
+		this.allJoin = false;
 	}
 	public JsonObject objMain;
 	public String url;
@@ -44,17 +49,18 @@ public class ApplicationZenodo {
 	public String[] type = {"pdf"};
 	public String nombreDirectorio;
 	public String palabraBuscar;
-
+	public boolean allJoin;
 	public void run() {
+		System.setProperty("webdriver.chrome.driver", "src/main/resources/chromedriver.exe");
 		objMain = new JsonObject();
 		url = "https://zenodo.org/search?size=20";
 		//driver = new HtmlUnitDriver(true);
-		/*ChromeOptions options = new ChromeOptions();
+		ChromeOptions options = new ChromeOptions();
 		options.addArguments("--start-maximized");
 		options.addArguments("--disable-popup-blocking");
-		options.addArguments("--headless");
-		driver = new ChromeDriver(options);*/
-		DesiredCapabilities caps = new DesiredCapabilities();
+		//options.addArguments("--headless");
+		driver = new ChromeDriver(options);
+		/*DesiredCapabilities caps = new DesiredCapabilities();
 		caps.setJavascriptEnabled(true);
 		caps.setCapability("takesScreenshot", true);
 		caps.setCapability("screen-resolution", "1280x1024");
@@ -64,7 +70,7 @@ public class ApplicationZenodo {
 		cliArgsCap.add("--webdriver-loglevel=NONE");
 		caps.setCapability(PhantomJSDriverService.PHANTOMJS_CLI_ARGS, cliArgsCap);
 		Logger.getLogger(PhantomJSDriverService.class.getName()).setLevel(Level.OFF);
-		driver = new PhantomJSDriver(caps);
+		driver = new PhantomJSDriver(caps);*/
 		url = chooseTopic(url,type);
 		url = chooseSearch(url, palabraBuscar);
 		driver.get(url + "&page=1");
@@ -75,26 +81,33 @@ public class ApplicationZenodo {
 		}
 		String[] imprimir = resultados.split(" ");
 		numeroResultados = Integer.parseInt(imprimir[1]);
+		System.out.println(numeroResultados);
 		paginaActual = 1;
 		extraccionActual = 1;
 		boolean avanzamos = true;
 		while(avanzamos) {	
-			waitJavaScript();
 			List<String> uris = newURI(driver);
 			extract(uris, driver);
 			avanzamos = avanzar(driver);
 		}
 		driver.close();
 	}
-	
+
 	public List<String> newURI(WebDriver driver) {
-		List<WebElement> elementos = driver.findElements(By.cssSelector("a[class='ng-binding'][href^=\"/record\"]"));
+		waitJavaScript();
+		try {
+			Thread.sleep(2000);
+		} catch (InterruptedException e1) {
+			e1.printStackTrace();
+		}
+		List<WebElement> elementos = driver.findElements(By.xpath("//h4//a[@class='ng-binding']"));
 		List<String> uris = new ArrayList<String>();
 		for(WebElement e: elementos) {
 			uris.add(e.getAttribute("href"));
 		}
 		return uris;
 	}
+	
 	public void extract(List<String> uris, WebDriver driver){
 		waitJavaScript();
 		JsonObject objson;
@@ -102,8 +115,12 @@ public class ApplicationZenodo {
 			objson = new JsonObject();
 			driver.get(s);
 			Document doc = Jsoup.parse(driver.getPageSource());
-			String nombreCarpeta = crearCarpeta();
-			downloadObjects(doc,nombreCarpeta);
+			String nombreCarpeta;
+			if(!allJoin)
+				nombreCarpeta = crearCarpeta();
+			else
+				nombreCarpeta = nombreDirectorio;
+			List<String> descargadosMios = downloadObjects(doc,nombreCarpeta);
 			objson.addProperty("titulo",  doc.select("meta[name=citation_title]").attr("content"));
 			objson.addProperty("fecha",  doc.select("meta[name=citation_publication_date]").attr("content"));
 			objson.addProperty("abstract", doc.select("meta[name=description]").attr("content"));
@@ -121,7 +138,12 @@ public class ApplicationZenodo {
 			objson.add("keyWords", nuevaArr);
 			objson.addProperty("doi", doc.select("meta[name=citation_doi]").attr("content"));
 			objson.addProperty("licence", doc.select("a[rel=license]").text());
-			File jsonFile = new File(nombreCarpeta + "\\MetaDatos" + extraccionActual +".json");
+			nuevaArr = new JsonArray();
+			for (String element : descargadosMios) {
+				nuevaArr.add(element);
+			}
+			objson.add("downloadObjects", nuevaArr);
+			File jsonFile = new File(nombreCarpeta + "\\ZenodoMeta" + extraccionActual +".json");
 			try {
 				BufferedWriter writer = new BufferedWriter(new FileWriter(jsonFile));
 				writer.write(objson.toString());
@@ -134,34 +156,98 @@ public class ApplicationZenodo {
 		}
 	}
 
-	public void downloadObjects(Document doc, String nombreCarpeta) {
+	public void descargarObjeto(String urlMia,String nameDescargar, String nombreCarpeta) {
+		try {
+			URL url = new URL(urlMia);
+			InputStream in = url.openStream();
+			Files.copy(in, Paths.get(nombreCarpeta + "\\" + nameDescargar));
+			in.close();
+		}catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	public List<String> downloadObjects(Document doc, String nombreCarpeta) {
 		//Pdf Download
+		List<String> descargados = new ArrayList<>();
 		Elements downloadLinks = doc.select("meta[name=citation_pdf_url]");
+		String aDescargar = "";
 		for (Element element : downloadLinks) {
 			String pdfUrl = element.attr("content");
-			try {
-				URL url = new URL(pdfUrl);
-				InputStream in = url.openStream();
-				Files.copy(in, Paths.get(nombreCarpeta + "\\Descarga" + extraccionActual + ".pdf"));
-				in.close();
-			}catch (IOException e) {
-				e.printStackTrace();
+			System.out.println(pdfUrl);
+			Pattern pattern = Pattern.compile("files\\/(.*)");
+			Matcher matcher = pattern.matcher(pdfUrl);
+			if(matcher.find()) {
+				aDescargar = matcher.group(1);
 			}
+			else {
+				int random = (int )(Math.random() * (this.numeroResultados * 2) + 1);
+				aDescargar = "PdfZenodo" + random + ".pdf";
+			}
+			descargados.add(aDescargar);
+			descargarObjeto(pdfUrl,aDescargar,nombreCarpeta);
 		}
-		//		//Image download
-		//		downloadLinks = doc.select("link[rel=alternate][type=image/png]");
-		//		for (Element element : downloadLinks) {
-		//			element.attr("href");
-		//		}
-		//		downloadLinks = doc.select("link[rel=alternate][type=image/jpeg]");
-		//		for (Element element : downloadLinks) {
-		//			element.attr("href");
-		//		}
-		//		//Word download
-		//		downloadLinks = doc.select("link[rel=alternate][type=application/vnd.openxmlformats-officedocument.wordprocessingml.document]");
-		//		for (Element element : downloadLinks) {
-		//			element.attr("href");
-		//		}
+		
+		//Image download -- PNG
+		downloadLinks = doc.select("link[rel=alternate][type=image/png]");
+		for (Element element : downloadLinks) {
+			String imageUrl = element.attr("href");
+			Pattern pattern = Pattern.compile("files\\/(.*?)");
+			String aCompilar = driver.getCurrentUrl();
+			Matcher matcher = pattern.matcher(aCompilar);
+			if(matcher.find()) {
+				aDescargar = matcher.group(1);
+			}
+			else {
+				int random = (int )(Math.random() * (this.numeroResultados * 2) + 1);
+				aDescargar = "ImageZenodo" + random + ".png";
+			}
+			descargados.add(aDescargar);
+			descargarObjeto(imageUrl,aDescargar,nombreCarpeta);
+		}
+
+/*
+ * Comprobar que el usuario quiere descargar las imagenes y los DOC tambien.
+ * Comprobar que estos existen dentro de la URL pasada o SE TE PARA EL PROGRAMA
+ */
+//		//Image download -- JPEG
+//		downloadLinks = doc.select("link[rel=alternate][type=image/jpeg]");
+//		for (Element element : downloadLinks) {
+//			element.attr("href");
+//			String imageUrl = element.attr("href");
+//			Pattern pattern = Pattern.compile("files\\/(.*?)");
+//			String aCompilar = driver.getCurrentUrl();
+//			Matcher matcher = pattern.matcher(aCompilar);
+//			if(matcher.find()) {
+//				aDescargar = matcher.group(1);
+//			}
+//			else {
+//				int random = (int )(Math.random() * (this.numeroResultados * 2) + 1);
+//				aDescargar = "ImageZenodo" + random + ".jpeg";
+//			}
+//			descargados.add(aDescargar);
+//			descargarObjeto(imageUrl,aDescargar,nombreCarpeta);
+//		}
+//		
+//		//Word download
+//		downloadLinks = doc.select("link[rel=alternate][type=application/vnd.openxmlformats-officedocument.wordprocessingml.document]");
+//		for (Element element : downloadLinks) {
+//			element.attr("href");
+//			String imageUrl = element.attr("href");
+//			Pattern pattern = Pattern.compile("files\\/(.*?)");
+//			String aCompilar = driver.getCurrentUrl();
+//			Matcher matcher = pattern.matcher(aCompilar);
+//			if(matcher.find()) {
+//				aDescargar = matcher.group(1);
+//			}
+//			else {
+//				int random = (int )(Math.random() * (this.numeroResultados * 2) + 1);
+//				aDescargar = "ImageZenodo" + random + ".docx";
+//			}
+//			descargados.add(aDescargar);
+//			descargarObjeto(imageUrl,aDescargar,nombreCarpeta);
+//		}
+		
+		return descargados;
 	}
 
 	public boolean avanzar(WebDriver driver){
@@ -184,6 +270,7 @@ public class ApplicationZenodo {
 	public String chooseTopic(String myUrl,String[] type){
 		for(String topic:type)
 			myUrl += "&file_type=" + topic;
+		myUrl += "&access_right=open";
 		return myUrl;
 	}
 	public String chooseSearch(String myUrl,String selection){
@@ -213,7 +300,7 @@ public class ApplicationZenodo {
 		};
 		return wait.until(jQuery) && wait.until(javaScript);
 	}
-	
+
 	private String crearCarpeta() {
 		String nuevaRuta = this.nombreDirectorio + "\\" + "Extraccion" + this.extraccionActual;
 		int i = 1;

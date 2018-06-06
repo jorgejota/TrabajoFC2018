@@ -2,20 +2,20 @@
 <section name="Workbench">
 	<section name="org.eclipse.ui.texteditor.FindReplaceDialog">
 		<item value="false" key="isRegEx"/>
-		<item value="dependencies" key="selection"/>
+		<item value="mode" key="selection"/>
 		<item value="false" key="casesensitive"/>
 		<item value="false" key="incremental"/>
 		<item value="true" key="wrap"/>
 		<item value="false" key="wholeword"/>
 		<list key="findhistory">
+			<item value="DIS"/>
+			<item value="bookmark"/>
 			<item value="system.exi"/>
 			<item value="system.ou"/>
 			<item value="descargarObjeto"/>
 			<item value="encuentro"/>
 			<item value="files"/>
 			<item value="https://zenodo.org/record/1108845"/>
-			<item value="email"/>
-			<item value="avanzar"/>
 		</list>
 		<list key="replacehistory">
 			<item value=""/>

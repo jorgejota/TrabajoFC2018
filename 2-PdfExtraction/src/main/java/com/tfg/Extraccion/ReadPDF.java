@@ -50,13 +50,6 @@ public class ReadPDF {
 	private File carpetaOut;
 	private boolean onlyText;
 	
-	public ReadPDF(File file, ExtractionMode mode, List<Integer> miLista, boolean fixText, File carpetaOut) {
-		this.file = file;
-		this.mode = mode;
-		this.miLista = miLista;
-		this.fixText = fixText;
-		this.carpetaOut = carpetaOut;
-	}
 	public ReadPDF(File file, ExtractionMode mode, List<Integer> miLista, boolean fixText, File carpetaOut, boolean onlyText) {
 		this.file = file;
 		this.mode = mode;
@@ -77,10 +70,13 @@ public class ReadPDF {
 		}else {
 			myRuta = carpetaOut.getAbsolutePath() + "\\" + file.getName().substring(0,file.getName().length()-4);
 		}
-		if(onlyText) {
-			extraerTexto();
-			return textoPrincipalDelPDF;
-		}
+		
+// 		Solo texto pero no funciona ni las paginas ni bookmaks
+//		if(onlyText) {
+//			System.out.println("Solo texto");
+//			extraerTexto();
+//			return textoPrincipalDelPDF;
+//		}
 		myRuta = crearCarpeta();
 
 		//Extraemos los metadatos
@@ -93,6 +89,7 @@ public class ReadPDF {
 		case BOOKMARK:
 			//Extraccion de los BookMarks
 			extraerBookMarks();
+			System.exit(0);
 			break;
 		case PAGES:
 			//Lo dividimos en subpaginas
@@ -155,6 +152,28 @@ public class ReadPDF {
 	}
 
 	//Para quitarte footer y header
+	public void deleteFooterHeader(PDPage pagee) {
+		Rectangle2D region = new Rectangle2D.Double(0f, 0f, 595f, 757.8f);
+		System.out.println(pagee.toString());
+		//Aplicar operacion para reducir entre un 5 y un 10%
+		/*System.out.println(pagee.getMediaBox().getHeight());
+		System.out.println(pagee.getMediaBox().getWidth());
+		System.out.println(pagee.getMediaBox().getLowerLeftX());
+		System.out.println(pagee.getMediaBox().getLowerLeftYs());*/
+		String regionName = "region";
+		PDFTextStripperByArea stripper;
+		int paginaActual = myPageTree.indexOf(pagee) + 1;
+		System.out.println("paginaActual " + paginaActual);
+		try {
+			stripper = new PDFTextStripperByArea();
+			stripper.addRegion(regionName, region);
+			stripper.extractRegions(pagee);
+			System.out.println("Region is "+ stripper.getTextForRegion("region"));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
 	public void textoLocalizado(PDPage pagee) {
 		Rectangle2D region = new Rectangle2D.Double(0f, 0f, 595f, 757.8f);
 		System.out.println(pagee.toString());
@@ -374,7 +393,7 @@ public class ReadPDF {
 		PDDocumentOutline root =  document.getDocumentCatalog().getDocumentOutline();
 		try {
 			PDOutlineItem item = root.getFirstChild();
-			while( item != null ){
+			while(item != null){
 				myBookMarks.add(extraerHijos(item));
 				item = item.getNextSibling();
 			}
@@ -385,5 +404,6 @@ public class ReadPDF {
 			//Aqui lo puedes hacer por 1/I/...
 			//Mira esto a ver si lo entiendes luego: https://stackoverflow.com/questions/44982486/how-to-select-pdf-page-using-bookmark-in-pdf-box
 		}
+		System.out.println("Ya salgo");
 	}
 }

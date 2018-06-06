@@ -2,14 +2,10 @@
 <section name="Workbench">
 	<section name="MavenProjectWizardArtifactPage">
 		<list key="groupId">
-			<item value="com.tfg"/>
 		</list>
 		<list key="name">
 		</list>
 		<list key="artifactId">
-			<item value="OptionalGrafica"/>
-			<item value="Descartes"/>
-			<item value="WebStraction"/>
 		</list>
 		<list key="projectNameTemplate">
 			<item value="[artifactId]"/>
@@ -90,10 +86,13 @@
 	</section>
 	<section name="Maven2ProjectWizardArchifactPage">
 		<list key="package">
+			<item value="com.tfg.webYDescartes"/>
 		</list>
 		<list key="groupId">
+			<item value="com.tfg"/>
 		</list>
 		<list key="artifactId">
+			<item value="webYDescartes"/>
 		</list>
 		<list key="projectNameTemplate">
 			<item value="[artifactId]"/>

@@ -21,6 +21,7 @@ public class MainClass {
 
 	public static void main(String[] args) {
 		boolean fixText = false;
+		boolean resources = false;
 		List<Integer> numeros = new ArrayList<>();
 		ExtractionMode modoExtraccion = ExtractionMode.COMPLETE;
 		File outputfolder = null;
@@ -35,6 +36,9 @@ public class MainClass {
 			if(line.hasOption('b') && line.hasOption('p')) {
 				System.out.println("¡Not both arguments at the same time!.");
 				System.exit(1);
+			}
+			if (line.hasOption('r')) {
+				resources = true;
 			}
 			String pdfOrFolder = line.getOptionValue('i');
 			List<File> misPDF = comprobacionArchivo(pdfOrFolder);
@@ -58,7 +62,10 @@ public class MainClass {
 			}
 			for (File file : misPDF) {
 				try {
-					new ReadPDF(file,modoExtraccion,numeros,fixText,outputfolder).run();
+					if(resources)
+						new ReadPDF(file,modoExtraccion,numeros,fixText,outputfolder,false).run();
+					else
+						new ReadPDF(file,modoExtraccion,numeros,fixText,outputfolder,true).run();
 				} catch (IOException | ParserConfigurationException e) {
 					e.printStackTrace();
 				}
@@ -73,7 +80,8 @@ public class MainClass {
 	public static Options buildOptions() {
 		Options o = new Options();
 		o.addOption("h", "help", false, "Indicate how yo use the program.");
-		o.addOption("f", "fix", false, "[EXPERIMENTAL] Force PDF to be extracted adjunting words, deleting files, deleting footers, .. By default, NO");
+		o.addOption("f", "fix", false, "[EXPERIMENTAL] Force PDF to be extracted adjunting words, deleting files, deleting footers, .. By default, disabled");
+		o.addOption("r", "resources", false, "Try to extract all resources from PDF (text, image and tables). By default, disabled");
 		o.addOption(Option.builder("i")
 				.longOpt("input")
 				.desc("[REQUIRED] Absolute Pdf or folder with PDF location path. Ex: /Users/thoqbk/table.pdf")
@@ -161,7 +169,6 @@ public class MainClass {
 		List<Integer> numbers = new ArrayList<>();
 		String[] arguments = auxiliar.split(",");
 		for (String string : arguments) {
-			System.out.println(string);
 			String[] listaNumeros = string.split("-");
 			for (String string2 : listaNumeros) {
 				try {

@@ -1,37 +1,38 @@
 package com.tfg.ckan;
 
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
-public class CkanConnection {
-	
-	private Client client;
-	
-	//Extraer informacion de esta pagina web
-	//http://docs.ckan.org/en/ckan-2.7.3/api/
-	public static void main(String[] args) {
-		
+public class CKANConnection {
+
+	public CKANConnection() {
 	}
-	public ClientResponse manejarCliente(String url,String input) {
-		try {
-			this.client.destroy();
-			this.client = Client.create();
-			client.addFilter(new HTTPBasicAuthFilter("jgalan", "oeg2018"));
-			WebResource webResource = this.client.resource(url);
-			ClientResponse aDevolver;
-			if(input != null) 
-				return webResource.type("application/json").post(ClientResponse.class, input);
-			else
-				return webResource.accept("application/json").get(ClientResponse.class);
-		}catch(com.sun.jersey.api.client.ClientHandlerException ex) {
-			System.out.println("Conexion caducada");
-			try {
-				Thread.sleep(30000);
-			} catch (InterruptedException e) {
-			}
-			return this.manejarCliente(url,input);
+
+	public static void main(String[] args) throws IOException {
+		try{                         
+			String api_key = "8192c248-e5f6-4403-8443-20252234487b";
+			//String data = "{\"Inputs\": {\"input1\": {\"ColumnNames\": [\"id\", \"regex\"], \"Values\": [[\"0\", \"the regex value\"]]}}, \"GlobalParameters\": {\"Database query\": \"select * from expone\"}}";
+			URL url = new URL("http://demo.ckan.org/api/3/action/dashboard_activity_list");
+			HttpURLConnection con = (HttpURLConnection) url.openConnection();
+			con.setDoInput(true);
+			con.setDoOutput (true);             
+			con.setRequestMethod("GET");
+			con.setRequestProperty("Content-Type", "application/json");
+			con.setRequestProperty("Authorization", api_key);
+			//make the request
+			//	        OutputStreamWriter writer = new OutputStreamWriter(con.getOutputStream());                
+			//	        writer.write(data);                
+			//	        writer.flush(); 
+			//read the request
+			BufferedReader reader=new BufferedReader(new InputStreamReader(con.getInputStream()));
+			String response;
+			while ((response=reader.readLine())!=null) 
+				System.out.println(response);
+		} catch(Exception e) {
+			System.out.println("Exception in MachineLearning.main " + e);
 		}
 	}
 }

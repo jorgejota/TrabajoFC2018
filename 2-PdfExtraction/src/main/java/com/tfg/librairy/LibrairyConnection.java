@@ -2,6 +2,7 @@ package com.tfg.librairy;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -17,20 +18,59 @@ import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 
 public class LibrairyConnection {
 
-	public LibrairyConnection(List<String> textos, String stopWords, String typeTopic) {
+	public LibrairyConnection(List<String> textos, String stopWords, String typeTopic, String urlTopics, String urlSpace, String user, String password) {
 		this.textos = textos;
 		mequedo = 0;
 		this.client = Client.create();
 		this.stopWords = stopWords;
 		this.typeTopic = typeTopic;
+		if(urlTopics.charAt(urlTopics.length()-1) != '/')
+			this.urlTopics = urlTopics + "/";
+		else
+			this.urlTopics = urlTopics;
+		if(urlSpace.charAt(urlSpace.length()-1) != '/')
+			this.urlSpace = urlSpace + "/";
+		else
+			this.urlSpace = urlSpace;
+		this.user = user;
+		this.password = password;
 	}
 
-	public LibrairyConnection(List<String> textos,String typeTopic) {
+	public LibrairyConnection(List<String> textos,String typeTopic,String urlTopics, String urlSpace, String user, String password) {
 		this.textos = textos;
 		mequedo = 0;
 		this.client = Client.create();
 		this.typeTopic = typeTopic;
 		this.stopWords = "";
+		if(urlTopics.charAt(urlTopics.length()-1) != '/')
+			this.urlTopics = urlTopics + "/";
+		else
+			this.urlTopics = urlTopics;
+		if(urlSpace.charAt(urlSpace.length()-1) != '/')
+			this.urlSpace = urlSpace + "/";
+		else
+			this.urlSpace = urlSpace;
+		this.user = user;
+		this.password = password;
+	}
+	
+	//Costructor llamado si unicamente queremos comprobar un PDF
+	public LibrairyConnection(String typeTopic,String urlTopics, String urlSpace, String user, String password) {
+		this.textos = new ArrayList<>();
+		mequedo = 0;
+		this.client = Client.create();
+		this.typeTopic = typeTopic;
+		this.stopWords = "";
+		if(urlTopics.charAt(urlTopics.length()-1) != '/')
+			this.urlTopics = urlTopics + "/";
+		else
+			this.urlTopics = urlTopics;
+		if(urlSpace.charAt(urlSpace.length()-1) != '/')
+			this.urlSpace = urlSpace + "/";
+		else
+			this.urlSpace = urlSpace;
+		this.user = user;
+		this.password = password;
 	}
 
 	private List<String> textos;
@@ -38,6 +78,10 @@ public class LibrairyConnection {
 	private Client client;
 	private String stopWords;
 	private String typeTopic;
+	private String urlTopics;
+	private String urlSpace;
+	private String user;
+	private String password;
 	/*
 	 * Creditos a: http://www.mkyong.com/webservices/jax-rs/restful-java-client-with-jersey-client/
 	 */
@@ -70,18 +114,41 @@ public class LibrairyConnection {
 		}
 	}
 	
-	public void comprobarArchivo() {
-		for (int i = 0; i < textos.size(); i++) {
-			String vectorTexto = shapePOST(fixearString(textos.get(i)));
-			neighboursPOST(""+i,vectorTexto);
+	/**
+	 * 
+	 * @param texto
+	 * @return
+	 */
+	public double[] comprobarArchivo(String texto) {
+		System.out.println("Vamos al shape");
+		String vectorTexto = shapePOST(fixearString(texto));
+		System.out.println(vectorTexto);
+		Pattern pattern = Pattern.compile("\\[(.*)\\]");
+		Matcher matcher = pattern.matcher(vectorTexto);
+		if(matcher.find()) {
+			String[] numeros = matcher.group(1).split(",");
+			double[] todosJuntos = new double[numeros.length];
+			for (int j = 0; j < numeros.length; j++) {
+				double numeroOriginal = Double.parseDouble(numeros[j]);
+				todosJuntos[j] = (double)Math.round(numeroOriginal * 100d) / 100d;
+			}
+			return todosJuntos;
 		}
+		else
+			return null;
+	}
+	
+	
+	public double comprobarArchivo(String texto, String numeroVecinos) {
+		String vectorTexto = shapePOST(fixearString(texto));
+		return neighboursPOST(vectorTexto, Integer.parseInt(numeroVecinos));
 	}
 
 	public ClientResponse manejarCliente(String url,String input) {
 		try {
 			this.client.destroy();
 			this.client = Client.create();
-			client.addFilter(new HTTPBasicAuthFilter("jgalan", "oeg2018"));
+			client.addFilter(new HTTPBasicAuthFilter(user, password));
 			WebResource webResource = this.client.resource(url);
 			ClientResponse aDevolver;
 			if(input != null) 
@@ -89,7 +156,7 @@ public class LibrairyConnection {
 			else
 				return webResource.accept("application/json").get(ClientResponse.class);
 		}catch(com.sun.jersey.api.client.ClientHandlerException ex) {
-			System.out.println("Conexion caducada");
+			System.out.println("Conexion caducada en " + url);
 			try {
 				Thread.sleep(30000);
 			} catch (InterruptedException e) {
@@ -123,9 +190,9 @@ public class LibrairyConnection {
 	}
 	private void documentsGET() {
 		Client client = Client.create();
-		client.addFilter(new HTTPBasicAuthFilter("jgalan", "oeg2018"));
+		client.addFilter(new HTTPBasicAuthFilter(user, password));
 		WebResource webResource = client
-				.resource("http://librairy.linkeddata.es/jgalan-topics/documents");
+				.resource(urlTopics + "documents");
 		ClientResponse response = webResource.accept("application/json")
 				.get(ClientResponse.class);
 		if (response.getStatus() != 200) {
@@ -144,7 +211,7 @@ public class LibrairyConnection {
 				+ "\"labels\": "+ssLABELS+",  "
 				+ "\"name\": \""+ssNAME+"\",  "
 				+ "\"text\": \""+ssTEXT+"\"}";
-		ClientResponse response = manejarCliente("http://librairy.linkeddata.es/jgalan-topics/documents", input);
+		ClientResponse response = manejarCliente(urlTopics + "documents", input);
 		int status = response.getStatus();
 		if (status == 400 || status == 401 || status == 402 || status == 403 || status == 404 || status == 503) {
 			try {
@@ -168,9 +235,9 @@ public class LibrairyConnection {
 
 	public void documentsDELETE() {
 		Client client = Client.create();
-		client.addFilter(new HTTPBasicAuthFilter("jgalan", "oeg2018"));
+		client.addFilter(new HTTPBasicAuthFilter(user, password));
 		WebResource webResource = client
-				.resource("http://lab4.librairy.linkeddata.es/jgalan-topics/documents");
+				.resource(urlTopics + "documents");
 		ClientResponse response = webResource.accept("application/json")
 				.delete(ClientResponse.class);
 		int status = response.getStatus();
@@ -185,7 +252,7 @@ public class LibrairyConnection {
 	}
 
 	public void dimensionsGET() {
-		ClientResponse response = manejarCliente("http://librairy.linkeddata.es/jgalan-topics/dimensions", null);
+		ClientResponse response = manejarCliente(urlTopics + "dimensions", null);
 		if (response.getStatus() != 200) {
 			try {
 				Thread.sleep(180000);
@@ -210,14 +277,14 @@ public class LibrairyConnection {
 	}
 
 	private String obtenerElJson(String laRespuesta, String queObtener) {
-		System.out.println("Mi respuesta: " + laRespuesta);
+
 		JsonParser jsonParser = new JsonParser();
 		JsonObject nuevo = (JsonObject)jsonParser.parse(laRespuesta);
 		return nuevo.get(queObtener).toString();
 	}
 
 	public void dimensionsPOST() {
-		ClientResponse response = manejarCliente("http://librairy.linkeddata.es/jgalan-topics/dimensions",
+		ClientResponse response = manejarCliente(urlTopics + "dimensions",
 				"{ \"parameters\": { "
 						+ "\"language\": \"en\", "
 						+ "\"email\": \"jorgejotahoyo@gmail.com\", "
@@ -235,7 +302,8 @@ public class LibrairyConnection {
 	}
 
 	public String shapePOST(String texto) {
-		ClientResponse response = manejarCliente("http://librairy.linkeddata.es/jgalan-topics/shape",
+		System.out.println("Entramos a shape");
+		ClientResponse response = manejarCliente(urlTopics + "shape",
 				"{ \"text\": \""+texto+"\"}");
 		int status = response.getStatus();
 		if (status == 400 || status == 401 || status == 402 || status == 403 || status == 404 || status == 503) {
@@ -256,13 +324,13 @@ public class LibrairyConnection {
 				System.out.println("Esto NUNCA deberia de ser vacio");
 				System.exit(0);
 			}
-			System.out.println(laRespuesta);
+			System.out.println("Mi vector es: " + laRespuesta);
 			return laRespuesta;
 		}
 	}
 
 	public void pointsPOST(String id, String name, String vector) {
-		ClientResponse response = manejarCliente("http://librairy.linkeddata.es/jgalan-space/points",
+		ClientResponse response = manejarCliente(urlSpace + "points",
 				"{ \"id\": \""+id+"\", "
 						+"\"name\": \""+name+"\", "
 						+"\"shape\": "+ vector + ", "
@@ -276,10 +344,10 @@ public class LibrairyConnection {
 		System.out.println(response);
 	}
 
-	public void neighboursPOST(String number, String vector) {
-		ClientResponse response = manejarCliente("http://librairy.linkeddata.es/jgalan-space/neighbours",
+	public double neighboursPOST(String vector, int numeroVecinos) {
+		ClientResponse response = manejarCliente(urlSpace + "neighbours",
 				"{ \"force\": true, "
-						+"\"number\": "+number + " , "
+						+"\"number\": "+ numeroVecinos + " , "
 						+"\"shape\": "+ vector + " , "
 						+"\"types\": [\""+ this.typeTopic+"\"]}");
 		int status = response.getStatus();
@@ -287,14 +355,20 @@ public class LibrairyConnection {
 			System.out.println("FALLO AL REALIZAR neighboursPOST\n" + response.getEntity(String.class));
 			System.exit(0);
 		}
-		System.out.println("Ha ido bien " + status);
 		String laRespuesta = obtenerElJson(response.getEntity(String.class),"neighbours");
-		Pattern pattern = Pattern.compile("score\":(.*?)}");
+		System.out.println("Mis vecinos");
+		Pattern pattern = Pattern.compile("[\\[,]\\{(.*?)\\}");
 		Matcher matcher = pattern.matcher(laRespuesta);
-		System.out.println(laRespuesta);
+		while(matcher.find()) {
+			System.out.println(matcher.group(1));
+		}
+		pattern = Pattern.compile("score\":(.*?)}");
+		matcher = pattern.matcher(laRespuesta);
 		if(matcher.find()) {
-			double porcentaje = Double.parseDouble(matcher.group(1));
-			System.out.println(porcentaje);
+			return Double.parseDouble(matcher.group(1));
+		}
+		else {
+			return -1.0;
 		}
 	}
 }

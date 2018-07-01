@@ -10,7 +10,7 @@
 		<item value="1000" key="org.eclipse.search.resultpage.limit"/>
 	</section>
 	<section name="TextSearchPage">
-		<item value="9" key="HISTORY_SIZE"/>
+		<item value="12" key="HISTORY_SIZE"/>
 		<item value="false" key="CASE_SENSITIVE"/>
 		<item value="false" key="REG_EX_SEARCH"/>
 		<item value="false" key="WHOLE_WORD"/>
@@ -20,7 +20,7 @@
 			<item value="true" key="ignoreCase"/>
 			<item value="0" key="scope"/>
 			<item value="false" key="isWholeWord"/>
-			<item value="TextPosition" key="textPattern"/>
+			<item value="netgloo" key="textPattern"/>
 			<item value="false" key="isRegExSearch"/>
 			<list key="fileNamePatterns">
 				<item value="*"/>
@@ -32,7 +32,7 @@
 			<item value="true" key="ignoreCase"/>
 			<item value="0" key="scope"/>
 			<item value="false" key="isWholeWord"/>
-			<item value="trap-range(s)" key="textPattern"/>
+			<item value="languageProfiles" key="textPattern"/>
 			<item value="false" key="isRegExSearch"/>
 			<list key="fileNamePatterns">
 				<item value="*"/>
@@ -44,7 +44,7 @@
 			<item value="true" key="ignoreCase"/>
 			<item value="0" key="scope"/>
 			<item value="false" key="isWholeWord"/>
-			<item value="parsed=COSObject" key="textPattern"/>
+			<item value="weblogic" key="textPattern"/>
 			<item value="false" key="isRegExSearch"/>
 			<list key="fileNamePatterns">
 				<item value="*"/>
@@ -52,46 +52,7 @@
 			<list key="workingSets">
 			</list>
 		</section>
-		<section name="HISTORY5">
-			<item value="true" key="ignoreCase"/>
-			<item value="0" key="scope"/>
-			<item value="false" key="isWholeWord"/>
-			<item value="writeString" key="textPattern"/>
-			<item value="false" key="isRegExSearch"/>
-			<list key="fileNamePatterns">
-				<item value="*"/>
-			</list>
-			<list key="workingSets">
-			</list>
-		</section>
-		<section name="EXTENSIONS">
-			<item value="*" key="0"/>
-		</section>
-		<section name="HISTORY8">
-			<item value="true" key="ignoreCase"/>
-			<item value="0" key="scope"/>
-			<item value="false" key="isWholeWord"/>
-			<item value="60 trap-range" key="textPattern"/>
-			<item value="false" key="isRegExSearch"/>
-			<list key="fileNamePatterns">
-				<item value="*"/>
-			</list>
-			<list key="workingSets">
-			</list>
-		</section>
-		<section name="HISTORY2">
-			<item value="true" key="ignoreCase"/>
-			<item value="0" key="scope"/>
-			<item value="false" key="isWholeWord"/>
-			<item value="mkdir" key="textPattern"/>
-			<item value="false" key="isRegExSearch"/>
-			<list key="fileNamePatterns">
-				<item value="*"/>
-			</list>
-			<list key="workingSets">
-			</list>
-		</section>
-		<section name="HISTORY3">
+		<section name="HISTORY10">
 			<item value="true" key="ignoreCase"/>
 			<item value="0" key="scope"/>
 			<item value="false" key="isWholeWord"/>
@@ -103,11 +64,86 @@
 			<list key="workingSets">
 			</list>
 		</section>
+		<section name="HISTORY5">
+			<item value="true" key="ignoreCase"/>
+			<item value="0" key="scope"/>
+			<item value="false" key="isWholeWord"/>
+			<item value="WEB-INF" key="textPattern"/>
+			<item value="false" key="isRegExSearch"/>
+			<list key="fileNamePatterns">
+				<item value="*"/>
+			</list>
+			<list key="workingSets">
+			</list>
+		</section>
+		<section name="EXTENSIONS">
+			<item value="*" key="0"/>
+		</section>
+		<section name="HISTORY11">
+			<item value="true" key="ignoreCase"/>
+			<item value="0" key="scope"/>
+			<item value="false" key="isWholeWord"/>
+			<item value="parsed=COSObject" key="textPattern"/>
+			<item value="false" key="isRegExSearch"/>
+			<list key="fileNamePatterns">
+				<item value="*"/>
+			</list>
+			<list key="workingSets">
+			</list>
+		</section>
+		<section name="HISTORY8">
+			<item value="true" key="ignoreCase"/>
+			<item value="0" key="scope"/>
+			<item value="false" key="isWholeWord"/>
+			<item value="showform" key="textPattern"/>
+			<item value="false" key="isRegExSearch"/>
+			<list key="fileNamePatterns">
+				<item value="*"/>
+			</list>
+			<list key="workingSets">
+			</list>
+		</section>
+		<section name="HISTORY9">
+			<item value="true" key="ignoreCase"/>
+			<item value="0" key="scope"/>
+			<item value="false" key="isWholeWord"/>
+			<item value="mkdir" key="textPattern"/>
+			<item value="false" key="isRegExSearch"/>
+			<list key="fileNamePatterns">
+				<item value="*"/>
+			</list>
+			<list key="workingSets">
+			</list>
+		</section>
+		<section name="HISTORY2">
+			<item value="true" key="ignoreCase"/>
+			<item value="0" key="scope"/>
+			<item value="false" key="isWholeWord"/>
+			<item value="commonWords" key="textPattern"/>
+			<item value="false" key="isRegExSearch"/>
+			<list key="fileNamePatterns">
+				<item value="*"/>
+			</list>
+			<list key="workingSets">
+			</list>
+		</section>
+		<section name="HISTORY3">
+			<item value="true" key="ignoreCase"/>
+			<item value="0" key="scope"/>
+			<item value="false" key="isWholeWord"/>
+			<item value="commonwords" key="textPattern"/>
+			<item value="false" key="isRegExSearch"/>
+			<list key="fileNamePatterns">
+				<item value="*"/>
+			</list>
+			<list key="workingSets">
+			</list>
+		</section>
 		<section name="HISTORY0">
 			<item value="true" key="ignoreCase"/>
 			<item value="0" key="scope"/>
 			<item value="false" key="isWholeWord"/>
-			<item value="languageProfiles" key="textPattern"/>
+			<item value="log4j" key="textPattern"/>
 			<item value="false" key="isRegExSearch"/>
 			<list key="fileNamePatterns">
 				<item value="*"/>
@@ -119,7 +155,7 @@
 			<item value="true" key="ignoreCase"/>
 			<item value="0" key="scope"/>
 			<item value="false" key="isWholeWord"/>
-			<item value="showform" key="textPattern"/>
+			<item value="anotations" key="textPattern"/>
 			<item value="false" key="isRegExSearch"/>
 			<list key="fileNamePatterns">
 				<item value="*"/>
@@ -158,7 +194,7 @@
 		<item value="716" key="DIALOG_WIDTH"/>
 		<item value="1|Segoe UI|9.0|0|WINDOWS|1|-12|0|0|0|400|0|0|0|1|0|0|0|0|Segoe UI" key="DIALOG_FONT_NAME"/>
 		<item value="463" key="DIALOG_HEIGHT"/>
-		<item value="333" key="DIALOG_X_ORIGIN"/>
+		<item value="106" key="DIALOG_X_ORIGIN"/>
 		<item value="102" key="DIALOG_Y_ORIGIN"/>
 	</section>
 </section>

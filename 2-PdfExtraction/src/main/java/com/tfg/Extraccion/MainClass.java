@@ -22,7 +22,9 @@ public class MainClass {
 	public static void main(String[] args) {
 		boolean fixText = false;
 		boolean resources = false;
-		List<Integer> numeros = new ArrayList<>();
+		boolean onlyText = true;
+		List<Anotations> numerosMarcadores = new ArrayList<>();
+		List<Anotations> numerosPaginas = new ArrayList<>();
 		ExtractionMode modoExtraccion = ExtractionMode.COMPLETE;
 		File outputfolder = null;
 		CommandLineParser parser = new DefaultParser();
@@ -56,16 +58,25 @@ public class MainClass {
 			if(line.hasOption('f'))
 				fixText = true;
 			if(line.hasOption('b')) {
-				modoExtraccion = ExtractionMode.BOOKMARK;
+				onlyText = false;
+				if(!line.hasOption('p'))
+					modoExtraccion = ExtractionMode.BOOKMARK;
 				String nuevo = line.getOptionValue('b');
-				numeros = comprobacionDeArgumentos(nuevo);
+				numerosMarcadores = comprobacionDeArgumentos(nuevo);
+			}
+			if(line.hasOption('p')) {
+				onlyText = false;
+				if(!line.hasOption('b'))
+					modoExtraccion = ExtractionMode.PAGES;
+				String nuevo = line.getOptionValue('p');
+				numerosPaginas = comprobacionDeArgumentos(nuevo);
 			}
 			for (File file : misPDF) {
 				try {
 					if(resources)
-						new ReadPDF(file,modoExtraccion,numeros,fixText,outputfolder,false).run();
+						new ReadPDF(file,modoExtraccion,numerosMarcadores,numerosPaginas,fixText,outputfolder,onlyText).run();
 					else
-						new ReadPDF(file,modoExtraccion,numeros,fixText,outputfolder,true).run();
+						new ReadPDF(file,modoExtraccion,numerosMarcadores,numerosPaginas,fixText,outputfolder,onlyText).run();
 				} catch (IOException | ParserConfigurationException e) {
 					e.printStackTrace();
 				}
@@ -76,7 +87,7 @@ public class MainClass {
 			System.exit(1);
 		}
 	}
-	
+
 	public static Options buildOptions() {
 		Options o = new Options();
 		o.addOption("h", "help", false, "Indicate how yo use the program.");
@@ -165,16 +176,36 @@ public class MainClass {
 		}
 	}
 
-	private static List<Integer> comprobacionDeArgumentos(String auxiliar) {
-		List<Integer> numbers = new ArrayList<>();
+	private static List<Anotations> comprobacionDeArgumentos(String auxiliar) {
+		List<Anotations> numbers = new ArrayList<>();
 		String[] arguments = auxiliar.split(",");
 		for (String string : arguments) {
-			String[] listaNumeros = string.split("-");
-			for (String string2 : listaNumeros) {
+			if(string.contains("-")) {
+				String[] listaNumeros = string.split("-");
+				//El programa no permite rango multiple al menos que este separado por una coma
+				if(listaNumeros.length != 2) {
+					System.out.println("The bookmark or page introduced is not a number");
+					System.exit(1);
+				}
 				try {
-					int numero = Integer.parseInt(string2);
-					if(!numbers.contains(numero))
-						numbers.add(numero);
+					int numeroInicial = Integer.parseInt(listaNumeros[0]);
+					int numeroFinal = Integer.parseInt(listaNumeros[1]);
+					if(numeroFinal < numeroInicial) {
+						System.out.println("The bookmark or page introduced is not a number");
+						System.exit(1);
+					}
+					Anotations rango = new Anotations(numeroInicial,numeroFinal);
+					numbers.add(rango);
+				}catch(java.lang.NumberFormatException e) {
+					System.out.println("The bookmark or page introduced is not a number");
+					System.exit(1);
+				}
+			}
+			else {
+				try {
+					int numeroInicial = Integer.parseInt(string);
+					Anotations rango = new Anotations(numeroInicial);
+					numbers.add(rango);
 				}catch(java.lang.NumberFormatException e) {
 					System.out.println("The bookmark or page introduced is not a number");
 					System.exit(1);

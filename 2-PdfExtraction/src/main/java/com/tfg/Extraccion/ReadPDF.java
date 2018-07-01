@@ -11,11 +11,14 @@ import java.nio.file.Paths;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import javax.imageio.ImageIO;
 import javax.xml.parsers.ParserConfigurationException;
+
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
@@ -31,6 +34,7 @@ import org.apache.pdfbox.text.PDFTextStripperByArea;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
+
 import com.google.gson.JsonObject;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVWriter;
@@ -44,39 +48,52 @@ public class ReadPDF {
 	private String myRuta;
 	private File file;
 	private ExtractionMode mode; 
-	private List<Integer> miLista;
+	private List<Anotations> numeroMarcadores;
+	private List<Anotations> numeroPaginas;
 	private String textoPrincipalDelPDF;
 	private boolean fixText;
 	private File carpetaOut;
 	private boolean onlyText;
-	
-	public ReadPDF(File file, ExtractionMode mode, List<Integer> miLista, boolean fixText, File carpetaOut, boolean onlyText) {
+
+	public ReadPDF(File file, ExtractionMode mode, List<Anotations> numeroMarcadores, 
+			List<Anotations> numeroPaginas, boolean fixText, File carpetaOut, boolean onlyText) {
+		java.util.logging.Logger.getLogger("org.apache.pdfbox").setLevel(java.util.logging.Level.SEVERE);
 		this.file = file;
 		this.mode = mode;
-		this.miLista = miLista;
+		this.numeroMarcadores = numeroMarcadores;
+		this.numeroPaginas = numeroPaginas;
 		this.fixText = fixText;
 		this.carpetaOut = carpetaOut;
 		this.onlyText = onlyText;
 	}
+	
+	public ReadPDF(File file) {
+		java.util.logging.Logger.getLogger("org.apache.pdfbox").setLevel(java.util.logging.Level.SEVERE);
+		this.file = file;
+		this.mode = ExtractionMode.COMPLETE;
+		this.fixText = false;
+		this.onlyText = true;
+	}
 
+	public Integer numberOfPages() throws InvalidPasswordException, IOException {
+		document = PDDocument.load(file);
+		return document.getNumberOfPages();
+	}
 	public String run() throws InvalidPasswordException, IOException, ParserConfigurationException {
 		//Cargamos el PDF
 		document = PDDocument.load(file);
 		myPageTree = document.getPages();
-
 		//Creaccion de la carpeta 
 		if(carpetaOut == null) {
-		myRuta = file.getAbsolutePath().substring(0,file.getAbsolutePath().length()-4);
+			myRuta = file.getAbsolutePath().substring(0,file.getAbsolutePath().length()-4);
 		}else {
 			myRuta = carpetaOut.getAbsolutePath() + "\\" + file.getName().substring(0,file.getName().length()-4);
 		}
-		
-// 		Solo texto pero no funciona ni las paginas ni bookmaks
-//		if(onlyText) {
-//			System.out.println("Solo texto");
-//			extraerTexto();
-//			return textoPrincipalDelPDF;
-//		}
+
+		if(onlyText) {
+			extraerTexto();
+			return textoPrincipalDelPDF;
+		}
 		myRuta = crearCarpeta();
 
 		//Extraemos los metadatos
@@ -85,21 +102,23 @@ public class ReadPDF {
 		//Extraer Imagenes
 		extraerImagenes();
 
-		switch (mode) {
-		case BOOKMARK:
-			//Extraccion de los BookMarks
-			extraerBookMarks();
-			System.exit(0);
-			break;
-		case PAGES:
-			//Lo dividimos en subpaginas
-			//Splitter splitter = new Splitter();
-			break;
-		default:
-			//Extraer Texto completo
-			extraerTexto();
-			break;
+		if(!onlyText) {
+			//Modo de extraccion por marcadores
+			switch(mode) {
+			case BOOKMARK:
+				extraerBookMarks();
+				break;
+			case PAGES:
+				extraerPages();
+				break;
+			default:
+				extraerBookMarks();
+				extraerPages();
+			}
 		}
+
+		//Modo de extraccion completo. Siempre se realiza por defecto
+		extraerTexto();
 
 		//Extraer tabla
 		try {
@@ -108,36 +127,16 @@ public class ReadPDF {
 			e1.printStackTrace();
 		}
 		//System.out.println(textoPrincipalDelPDF);
-		imprimirTexto();
+		imprimirTexto(myRuta, "Texto",textoPrincipalDelPDF);
 		return textoPrincipalDelPDF;
 	}
 
-	public void imprimirTexto() {
+	public void imprimirTexto(String ruta, String nombreArchivo, String textoImprimir) {
 		try {
-			Files.write(Paths.get(myRuta + "Texto" + ".txt"), textoPrincipalDelPDF.getBytes());
+			Files.write(Paths.get(ruta + nombreArchivo + ".txt"), textoImprimir.getBytes());
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-	}
-	public PdfBookMarks extraerHijos(PDOutlineItem item){
-		PdfBookMarks aDevolver = new PdfBookMarks();
-		aDevolver.setTitulo(item.getTitle());
-		//Localizacion de texto
-		try {
-			PDPage miPage = item.findDestinationPage(document);
-			System.out.println("Aqui empieza: " + item.getTitle());
-			textoLocalizado(miPage);
-			System.out.println("Aqui acaba: " + item.getTitle());
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		//Localizacion de texto 
-		PDOutlineItem child = item.getFirstChild();
-		while(child != null){
-			aDevolver.setHijo(extraerHijos(child));
-			child = child.getNextSibling();
-		}
-		return aDevolver;
 	}
 
 	public String crearCarpeta() {
@@ -173,27 +172,33 @@ public class ReadPDF {
 			e.printStackTrace();
 		}
 	}
-	
-	public void textoLocalizado(PDPage pagee) {
-		Rectangle2D region = new Rectangle2D.Double(0f, 0f, 595f, 757.8f);
-		System.out.println(pagee.toString());
-		//Aplicar operacion para reducir entre un 5 y un 10%
-		/*System.out.println(pagee.getMediaBox().getHeight());
-		System.out.println(pagee.getMediaBox().getWidth());
-		System.out.println(pagee.getMediaBox().getLowerLeftX());
-		System.out.println(pagee.getMediaBox().getLowerLeftYs());*/
-		String regionName = "region";
-		PDFTextStripperByArea stripper;
-		int paginaActual = myPageTree.indexOf(pagee) + 1;
-		System.out.println("paginaActual " + paginaActual);
+
+	public String textoLocalizado(String firstB, int pageStart, String lastB, int pageEnd) {
+		String localiteTexto = "";
 		try {
-			stripper = new PDFTextStripperByArea();
-			stripper.addRegion(regionName, region);
-			stripper.extractRegions(pagee);
-			System.out.println("Region is "+ stripper.getTextForRegion("region"));
+			PDFTextStripper reader = new PDFTextStripper();
+			reader.setStartPage(pageStart);
+			reader.setEndPage(pageEnd);
+			localiteTexto = reader.getText(document);
+			if(!lastB.equals("")) {
+				Pattern pattern = Pattern.compile(fixearString(firstB) + "(.*?)" + fixearString(lastB), Pattern.DOTALL);
+				Matcher matcher = pattern.matcher(localiteTexto);
+				if(matcher.find()) {
+					localiteTexto = firstB + matcher.group(1);
+				}
+			}
+			else {
+				Pattern pattern = Pattern.compile(fixearString(firstB) + "(.*?)", Pattern.DOTALL);
+				Matcher matcher = pattern.matcher(localiteTexto);
+				if(matcher.find()) {
+					localiteTexto = firstB + matcher.group(1);
+				}
+			}
 		} catch (IOException e) {
 			e.printStackTrace();
+			System.out.println("Ha ocurrido un problema con los marcadores");
 		}
+		return localiteTexto;
 	}
 
 	public void extraerMetaDatos() {
@@ -249,7 +254,7 @@ public class ReadPDF {
 				}
 			}
 			textoPrincipalDelPDF = text;
-		} catch (IOException |  java.util.regex.PatternSyntaxException e) {
+		} catch (IOException |  java.util.regex.PatternSyntaxException | NullPointerException e) {
 			e.printStackTrace();
 			textoPrincipalDelPDF = "";
 			return;
@@ -387,23 +392,92 @@ public class ReadPDF {
 		textoPrincipalDelPDF = textoPrincipalDelPDF .replaceAll(myFinalString, "");
 	}
 
+		public void extraerPages() {
+			File carpetaMarcadores = new File(myRuta + "Marcadores");
+			carpetaMarcadores.mkdirs();
+			PDFTextStripper reader;
+			try {
+				reader = new PDFTextStripper();
+				for (Anotations rango : numeroPaginas) {
+					reader.setStartPage(rango.getInitNumber());
+					reader.setEndPage(rango.getFinalNumber());
+					String localiteTexto = reader.getText(document);
+					imprimirTexto(carpetaMarcadores.getAbsolutePath() +"\\", "Page" + rango.toString(),localiteTexto);
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+				System.out.println("Error al extraer de paginas");
+			}
+		}
+
 	public void extraerBookMarks() {
-		ArrayList<PdfBookMarks> myBookMarks;
-		myBookMarks = new ArrayList<PdfBookMarks>();
+		File carpetaMarcadores = new File(myRuta + "Marcadores");
+		carpetaMarcadores.mkdirs();
+		LinkedList<String> myBookMarks = new LinkedList<String>(); //Titulo de los marcadores principales
+		LinkedList<Integer> myPageMarks = new LinkedList<Integer>(); //Numero de los marcadores principales
 		PDDocumentOutline root =  document.getDocumentCatalog().getDocumentOutline();
 		try {
 			PDOutlineItem item = root.getFirstChild();
 			while(item != null){
-				myBookMarks.add(extraerHijos(item));
-				item = item.getNextSibling();
+				PDPage miPage;
+				try {
+					miPage = item.findDestinationPage(document);
+					int paginaActual = myPageTree.indexOf(miPage) + 1;
+					myBookMarks.add(item.getTitle());
+					myPageMarks.add(paginaActual);
+					item = item.getNextSibling();
+				} catch (IOException e) {
+					System.out.println("No se han encontrado marcadores/bookmarks");
+					e.printStackTrace();
+				}
+			}
+
+			//Procedemos a la extraccion de textos
+			for (Anotations bookmarksPedido: this.numeroMarcadores) {
+				String textoDelMarcador = "";
+				if(bookmarksPedido.getFinalNumber() > myBookMarks.size()) {
+					System.out.println("Este PDF solo tiene " + myBookMarks.size() + " marcador(es)");
+					break;
+				}
+				if(bookmarksPedido.getInitNumber() == myBookMarks.size()) {
+					textoDelMarcador = textoLocalizado(myBookMarks.get(bookmarksPedido.getInitNumber()-1),
+							myPageMarks.get(bookmarksPedido.getInitNumber()-1), 
+							"",document.getNumberOfPages());
+				}
+				else {
+					textoDelMarcador = textoLocalizado(myBookMarks.get(bookmarksPedido.getInitNumber()-1),
+							myPageMarks.get(bookmarksPedido.getInitNumber()-1), 
+							myBookMarks.get(bookmarksPedido.getFinalNumber()),myPageMarks.get(bookmarksPedido.getFinalNumber()));
+				}
+				imprimirTexto(carpetaMarcadores.getAbsolutePath() + "\\", "BookMark" + bookmarksPedido.toString(),textoDelMarcador);
 			}
 		}
 		catch(java.lang.NullPointerException e) {
 			System.out.println("No se han encontrado marcadores/bookmarks");
-			//System.out.println("Procediendo a busqueda manual");
-			//Aqui lo puedes hacer por 1/I/...
-			//Mira esto a ver si lo entiendes luego: https://stackoverflow.com/questions/44982486/how-to-select-pdf-page-using-bookmark-in-pdf-box
+			e.printStackTrace();
 		}
-		System.out.println("Ya salgo");
+	}
+
+
+	public void textoLocalizado(PDPage pagee) {
+		Rectangle2D region = new Rectangle2D.Double(0f, 0f, 595f, 757.8f);
+		System.out.println(pagee.toString());
+		//Aplicar operacion para reducir entre un 5 y un 10%
+		/*System.out.println(pagee.getMediaBox().getHeight());
+		System.out.println(pagee.getMediaBox().getWidth());
+		System.out.println(pagee.getMediaBox().getLowerLeftX());
+		System.out.println(pagee.getMediaBox().getLowerLeftYs());*/
+		String regionName = "region";
+		PDFTextStripperByArea stripper;
+		int paginaActual = myPageTree.indexOf(pagee) + 1;
+		System.out.println("paginaActual " + paginaActual);
+		try {
+			stripper = new PDFTextStripperByArea();
+			stripper.addRegion(regionName, region);
+			stripper.extractRegions(pagee);
+			System.out.println("Region is "+ stripper.getTextForRegion("region"));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 }

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Crawly | MAKE</title>
+	<link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
+	<link rel="stylesheet" href="css/fontello.css">
+	<link rel="stylesheet" href="css/main.css">
+	<script src="js/jquery-3.3.1.min.js"></script>
+	<style type="text/css">
+	.myLoader2 {
+		display: none;
+		border: 10px solid #f3f3f3;
+		border-radius: 50%;
+		border-top: 10px solid #0000b3;
+		width: 25px;
+		height: 25px;
+		-webkit-animation: spin 2s linear infinite; /* Safari */
+		animation: spin 2s linear infinite;
+	}
+</style>
+</head>
+<body>
+	<header>
+		<div class="contenedor">
+			<h1>Crawly</h1>
+			<input type="checkbox" id="menu-bar">
+			<label class="icon-menu" for="menu-bar"></label>
+			<nav class="menu">
+				<a href="index.html">Home</a>
+				<a href="discover.html">Discover</a>
+				<a href="extract.html">Extract</a>
+				<a href="makeYourOwn.html">Make</a>
+			</nav>
+		</div>
+	</header>
+	<div id="desaparecer" class="container">
+		<h2>Fill in the data</h2>
+		<form accept-charset=utf-8 onsubmit="crearLibreria()">
+			<div class="form-group">
+				<label for="url">Librairy URL:</label>
+				<input type="text" class="form-control" id="url" placeholder="Enter url" name="url" required>
+			</div>
+			<div class="form-group">
+				<label for="user">User:</label>
+				<input type="text" class="form-control" id="user" placeholder="Enter user" name="user" required>
+			</div>
+			<div class="form-group">
+				<label for="topic">Topic:</label>
+				<input type="text" class="form-control" id="topic" placeholder="Enter topic" name="topic" required>
+			</div>
+			<div class="form-group">
+				<label for="pwd">Password:</label>
+				<input type="password" class="form-control" id="pwd" placeholder="Enter password" name="pwd" required>
+			</div>
+			<div class="form-group">
+				<label for="email">Email:</label>
+				<input type="email" class="form-control" id="email" placeholder="Enter email" name="email" required>
+			</div>
+			<div class="form-group">
+				<label for="number">Number of documents:</label>
+				<input type="number" min="0" class="form-control" id="number" placeholder="Enter number" name="number" required>
+			</div>
+			<div class="checkbox">
+				<label><input type="checkbox" name="remember">   Delete previous content?</label>
+			</div>
+			<button type="submit" id="acabar" class="btn btn-default">Submit</button>
+		</form>
+	</div>
+	<span id="ponerAlgoAqui"></span>
+	<div id="myLoader2"></div>
+	<script type="text/javascript">
+		function crearLibreria(){
+			document.getElementById("desaparecer").style.display="none";
+			document.getElementById("myLoader2").style.display="block";
+			var url = document.getElementById("url").value;
+			var user = document.getElementById("user").value;
+			var topic = document.getElementById("topic").value;
+			var password = document.getElementById("pwd").value;
+			var email = document.getElementById("email").value;
+			var nDocuments = document.getElementById("number").value;
+			uploadFile(url,user,topic,password,email,nDocuments);
+		}
+		function uploadFile(url,user,topic,password,email,nDocuments) {
+			console.log("Entramos");
+			$.ajax({
+				url: "/makeModel",
+				type: "GET",
+				data: {urlLibrairy: url , 
+					user: user,
+					password: password,
+					topic: topic,
+					correo: email,
+					nDocuments: nDocuments
+				},
+				success: function (response) {
+					document.getElementById("myLoader2").style.display="none";
+					document.getElementById('ponerAlgoAqui').innerHTML="Successful Request. You will receive an email shortly";
+				},
+				error: function (response) {
+					document.getElementById("myLoader2").style.display="none";
+					document.getElementById('ponerAlgoAqui').innerHTML="An error has ocurred";
+				}
+			});
+		} 
+	</script>
+</body>
+</html>
+

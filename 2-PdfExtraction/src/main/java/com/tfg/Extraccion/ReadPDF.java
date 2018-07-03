@@ -48,15 +48,15 @@ public class ReadPDF {
 	private String myRuta;
 	private File file;
 	private ExtractionMode mode; 
-	private List<Anotations> numeroMarcadores;
-	private List<Anotations> numeroPaginas;
+	private List<RangeExtraction> numeroMarcadores;
+	private List<RangeExtraction> numeroPaginas;
 	private String textoPrincipalDelPDF;
 	private boolean fixText;
 	private File carpetaOut;
 	private boolean onlyText;
 
-	public ReadPDF(File file, ExtractionMode mode, List<Anotations> numeroMarcadores, 
-			List<Anotations> numeroPaginas, boolean fixText, File carpetaOut, boolean onlyText) {
+	public ReadPDF(File file, ExtractionMode mode, List<RangeExtraction> numeroMarcadores, 
+			List<RangeExtraction> numeroPaginas, boolean fixText, File carpetaOut,boolean onlyText) {
 		java.util.logging.Logger.getLogger("org.apache.pdfbox").setLevel(java.util.logging.Level.SEVERE);
 		this.file = file;
 		this.mode = mode;
@@ -79,6 +79,20 @@ public class ReadPDF {
 		document = PDDocument.load(file);
 		return document.getNumberOfPages();
 	}
+	
+	public String obtainOnlyText() throws InvalidPasswordException, IOException {
+		//Cargamos el PDF
+		document = PDDocument.load(file);
+		myPageTree = document.getPages();
+		//Creaccion de la carpeta 
+		if(carpetaOut == null) {
+			myRuta = file.getAbsolutePath().substring(0,file.getAbsolutePath().length()-4);
+		}else {
+			myRuta = carpetaOut.getAbsolutePath() + "\\" + file.getName().substring(0,file.getName().length()-4);
+		}
+		extraerTexto();
+		return textoPrincipalDelPDF;
+	}
 	public String run() throws InvalidPasswordException, IOException, ParserConfigurationException {
 		//Cargamos el PDF
 		document = PDDocument.load(file);
@@ -90,12 +104,12 @@ public class ReadPDF {
 			myRuta = carpetaOut.getAbsolutePath() + "\\" + file.getName().substring(0,file.getName().length()-4);
 		}
 
-		if(onlyText) {
-			extraerTexto();
-			return textoPrincipalDelPDF;
-		}
 		myRuta = crearCarpeta();
 
+		if(onlyText) {
+			extraerTexto();
+			return myRuta;
+		}
 		//Extraemos los metadatos
 		extraerMetaDatos();
 
@@ -128,7 +142,7 @@ public class ReadPDF {
 		}
 		//System.out.println(textoPrincipalDelPDF);
 		imprimirTexto(myRuta, "Texto",textoPrincipalDelPDF);
-		return textoPrincipalDelPDF;
+		return myRuta;
 	}
 
 	public void imprimirTexto(String ruta, String nombreArchivo, String textoImprimir) {
@@ -398,7 +412,7 @@ public class ReadPDF {
 			PDFTextStripper reader;
 			try {
 				reader = new PDFTextStripper();
-				for (Anotations rango : numeroPaginas) {
+				for (RangeExtraction rango : numeroPaginas) {
 					reader.setStartPage(rango.getInitNumber());
 					reader.setEndPage(rango.getFinalNumber());
 					String localiteTexto = reader.getText(document);
@@ -433,7 +447,7 @@ public class ReadPDF {
 			}
 
 			//Procedemos a la extraccion de textos
-			for (Anotations bookmarksPedido: this.numeroMarcadores) {
+			for (RangeExtraction bookmarksPedido: this.numeroMarcadores) {
 				String textoDelMarcador = "";
 				if(bookmarksPedido.getFinalNumber() > myBookMarks.size()) {
 					System.out.println("Este PDF solo tiene " + myBookMarks.size() + " marcador(es)");

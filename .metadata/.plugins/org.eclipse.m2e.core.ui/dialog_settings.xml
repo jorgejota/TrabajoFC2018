@@ -33,6 +33,7 @@
 	</section>
 	<section name="MavenProjectImportWizardPage">
 		<list key="rootDirectory">
+			<item value="C:\Users\jorge\Desktop\1.1-Batch"/>
 			<item value="C:\Users\jorge\Desktop\spring-boot-file-upload-with-ajax"/>
 			<item value="C:\Users\jorge\Desktop\spring-boot-samples-master\spring-boot-samples-master\spring-boot-file-upload-with-ajax"/>
 			<item value="C:\Users\jorge\Desktop\DAW\SpringBootUploadDownloadMultipartFile"/>
@@ -77,6 +78,7 @@
 	</section>
 	<section name="MavenProjectWizardLocationPage">
 		<list key="location">
+			<item value="C:\Users\jorge\Desktop\TrabajoFC\WorkSpace-Eclipse\2-PdfExtraction"/>
 			<item value="C:\Users\jorge\Desktop\TrabajoFC\WorkSpace-Eclipse\1-Crawler"/>
 			<item value="C:\Users\jorge\Desktop\TrabajoFC\WorkSpace-Eclipse\2-PdfExtraction\src\main\java\com\tfg\apachepoi\MiNuevaPrueba.java"/>
 		</list>
@@ -91,12 +93,17 @@
 	</section>
 	<section name="Maven2ProjectWizardArchifactPage">
 		<list key="package">
+			<item value="com.tfg._LibrairyConection"/>
+			<item value="com.tfg._CKANConection"/>
+			<item value="com.tfg"/>
 			<item value="com.tfg.webYDescartes"/>
 		</list>
 		<list key="groupId">
 			<item value="com.tfg"/>
 		</list>
 		<list key="artifactId">
+			<item value="4-LibrairyConection"/>
+			<item value="3-CKANConection"/>
 			<item value="webYDescartes"/>
 		</list>
 		<list key="projectNameTemplate">

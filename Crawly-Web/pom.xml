@@ -38,6 +38,12 @@
 			<artifactId>PDFExtractor</artifactId>
 			<version>1.0</version>
 		</dependency>
+
+		<dependency>
+			<groupId>com.tfg</groupId>
+			<artifactId>4-LibrairyConection</artifactId>
+			<version>1.0</version>
+		</dependency>
 	</dependencies>
 
 	<build>

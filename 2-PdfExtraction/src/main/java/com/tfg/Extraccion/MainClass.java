@@ -4,9 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.xml.parsers.ParserConfigurationException;
-
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -15,16 +13,14 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
-import com.tfg.librairy.LibrairyConnection;
-
 public class MainClass {
 
 	public static void main(String[] args) {
 		boolean fixText = false;
 		boolean resources = false;
 		boolean onlyText = true;
-		List<Anotations> numerosMarcadores = new ArrayList<>();
-		List<Anotations> numerosPaginas = new ArrayList<>();
+		List<RangeExtraction> numerosMarcadores = new ArrayList<>();
+		List<RangeExtraction> numerosPaginas = new ArrayList<>();
 		ExtractionMode modoExtraccion = ExtractionMode.COMPLETE;
 		File outputfolder = null;
 		CommandLineParser parser = new DefaultParser();
@@ -176,8 +172,8 @@ public class MainClass {
 		}
 	}
 
-	private static List<Anotations> comprobacionDeArgumentos(String auxiliar) {
-		List<Anotations> numbers = new ArrayList<>();
+	private static List<RangeExtraction> comprobacionDeArgumentos(String auxiliar) {
+		List<RangeExtraction> numbers = new ArrayList<>();
 		String[] arguments = auxiliar.split(",");
 		for (String string : arguments) {
 			if(string.contains("-")) {
@@ -194,7 +190,7 @@ public class MainClass {
 						System.out.println("The bookmark or page introduced is not a number");
 						System.exit(1);
 					}
-					Anotations rango = new Anotations(numeroInicial,numeroFinal);
+					RangeExtraction rango = new RangeExtraction(numeroInicial,numeroFinal);
 					numbers.add(rango);
 				}catch(java.lang.NumberFormatException e) {
 					System.out.println("The bookmark or page introduced is not a number");
@@ -204,7 +200,7 @@ public class MainClass {
 			else {
 				try {
 					int numeroInicial = Integer.parseInt(string);
-					Anotations rango = new Anotations(numeroInicial);
+					RangeExtraction rango = new RangeExtraction(numeroInicial);
 					numbers.add(rango);
 				}catch(java.lang.NumberFormatException e) {
 					System.out.println("The bookmark or page introduced is not a number");

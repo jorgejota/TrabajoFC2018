@@ -1,13 +1,10 @@
 package com.tfg.Extraccion;
 
-
 import java.security.Permission;
 
-// Execute a block of code and captures return value from call to System.exit without exiting JVM.
 class ExitCodeCaptor extends SecurityManager implements AutoCloseable {
 	private final SecurityManager existingSecurityManager;
-	private int status = 0;
-
+	private int status = 0;	
 	ExitCodeCaptor() {
 		this.existingSecurityManager = System.getSecurityManager();
 		System.setSecurityManager(this);

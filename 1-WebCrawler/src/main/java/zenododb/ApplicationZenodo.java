@@ -1,13 +1,17 @@
 package zenododb;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -34,12 +38,22 @@ public class ApplicationZenodo {
 		this.nombreDirectorio = nombreDirectorio;
 		this.palabraBuscar = keyWords;
 		this.allJoin = allJoin;
+		this.previousLinks = new ArrayList<>();
+	}
+	public ApplicationZenodo(String nombreDirectorio, String keyWords, boolean allJoin, boolean json) {
+		this.nombreDirectorio = nombreDirectorio;
+		this.palabraBuscar = keyWords;
+		this.allJoin = allJoin;
+		this.previousLinks = new ArrayList<>();
+		this.json = json;
 	}
 	public ApplicationZenodo(String nombreDirectorio, String keyWords) {
 		this.nombreDirectorio = nombreDirectorio;
 		this.palabraBuscar = keyWords;
 		this.allJoin = false;
+		this.previousLinks = new ArrayList<>();
 	}
+	
 	public JsonObject objMain;
 	public String url;
 	public Integer numeroResultados;
@@ -49,9 +63,24 @@ public class ApplicationZenodo {
 	public String[] type = {"pdf"};
 	public String nombreDirectorio;
 	public String palabraBuscar;
+	public File previousFile;
+	public List<String> previousLinks;
 	public boolean allJoin;
+
+	//Para CKAN
+	public boolean json;
+	public List<JsonObject> listaJson;
+	
+	public List<JsonObject> extractAllJson(){
+		listaJson = new ArrayList<>();
+		run();
+		return listaJson;
+	}
+	
 	public void run() {
-		System.setProperty("webdriver.chrome.driver", "src/main/resources/chromedriver.exe");
+		java.util.logging.Logger.getLogger("org.apache.pdfbox").setLevel(java.util.logging.Level.SEVERE);
+		loadPreviousDownloads();
+		System.setProperty("webdriver.chrome.driver", "chromedriver.exe");
 		objMain = new JsonObject();
 		url = "https://zenodo.org/search?size=20";
 		//driver = new HtmlUnitDriver(true);
@@ -107,52 +136,94 @@ public class ApplicationZenodo {
 		}
 		return uris;
 	}
-	
+
 	public void extract(List<String> uris, WebDriver driver){
 		waitJavaScript();
 		JsonObject objson;
 		for(String s: uris) {
-			objson = new JsonObject();
-			driver.get(s);
-			Document doc = Jsoup.parse(driver.getPageSource());
-			String nombreCarpeta;
-			if(!allJoin)
-				nombreCarpeta = crearCarpeta();
-			else
-				nombreCarpeta = nombreDirectorio;
-			List<String> descargadosMios = downloadObjects(doc,nombreCarpeta);
-			objson.addProperty("titulo",  doc.select("meta[name=citation_title]").attr("content"));
-			objson.addProperty("fecha",  doc.select("meta[name=citation_publication_date]").attr("content"));
-			objson.addProperty("abstract", doc.select("meta[name=description]").attr("content"));
-			Elements authors = doc.select("meta[name=citation_author]");
-			JsonArray nuevaArr = new JsonArray();
-			for (Element element : authors) {
-				nuevaArr.add(element.attr("content"));
+			if(comprobarRecorrido(s)) {
+				objson = new JsonObject();
+				driver.get(s);
+				Document doc = Jsoup.parse(driver.getPageSource());
+				String nombreCarpeta;
+				if(!allJoin)
+					nombreCarpeta = crearCarpeta();
+				else
+					nombreCarpeta = nombreDirectorio;
+				List<String> descargadosMios = downloadObjects(doc,nombreCarpeta);
+				objson.addProperty("titulo",  doc.select("meta[name=citation_title]").attr("content"));
+				objson.addProperty("fecha",  doc.select("meta[name=citation_publication_date]").attr("content"));
+				objson.addProperty("abstract", doc.select("meta[name=description]").attr("content"));
+				Elements authors = doc.select("meta[name=citation_author]");
+				JsonArray nuevaArr = new JsonArray();
+				for (Element element : authors) {
+					nuevaArr.add(element.attr("content"));
+				}
+				objson.add("authors", nuevaArr);
+				authors = doc.select("meta[name=citation_keywords]");
+				nuevaArr = new JsonArray();
+				for (Element element : authors) {
+					nuevaArr.add(element.attr("content"));
+				}
+				objson.add("keyWords", nuevaArr);
+				objson.addProperty("doi", doc.select("meta[name=citation_doi]").attr("content"));
+				objson.addProperty("licence", doc.select("a[rel=license]").text());
+				nuevaArr = new JsonArray();
+				for (String element : descargadosMios) {
+					nuevaArr.add(element);
+				}
+				objson.add("downloadObjects", nuevaArr);
+				File jsonFile = new File(nombreCarpeta + "\\ZenodoMeta" + extraccionActual +".json");
+				try {
+					BufferedWriter writer = new BufferedWriter(new FileWriter(jsonFile));
+					writer.write(objson.toString());
+					writer.close();
+				}catch (IOException e) {
+					e.printStackTrace();
+				}
+				objMain.add("Extraccion" + extraccionActual, objson);
+				if(json)
+					this.listaJson.add(objson);
+				extraccionActual++;
+				previousLinks.add(s);
+				try {
+					Files.write(previousFile.toPath(), (s + "\n").getBytes(), StandardOpenOption.APPEND);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				System.out.println();
 			}
-			objson.add("authors", nuevaArr);
-			authors = doc.select("meta[name=citation_keywords]");
-			nuevaArr = new JsonArray();
-			for (Element element : authors) {
-				nuevaArr.add(element.attr("content"));
-			}
-			objson.add("keyWords", nuevaArr);
-			objson.addProperty("doi", doc.select("meta[name=citation_doi]").attr("content"));
-			objson.addProperty("licence", doc.select("a[rel=license]").text());
-			nuevaArr = new JsonArray();
-			for (String element : descargadosMios) {
-				nuevaArr.add(element);
-			}
-			objson.add("downloadObjects", nuevaArr);
-			File jsonFile = new File(nombreCarpeta + "\\ZenodoMeta" + extraccionActual +".json");
+		}
+	}
+
+	public boolean comprobarRecorrido(String link) {
+		if(previousLinks.contains(link))
+			return false;
+		return true;
+	}
+
+	public void loadPreviousDownloads(){
+		previousFile = new File(nombreDirectorio + "\\DOWNLOADURLs.txt");
+		previousLinks = new ArrayList<>();
+		if(!previousFile.exists()) {
 			try {
-				BufferedWriter writer = new BufferedWriter(new FileWriter(jsonFile));
-				writer.write(objson.toString());
-				writer.close();
-			}catch (IOException e) {
+				previousFile.createNewFile();
+				extraccionActual = 1;
+			} catch (IOException e) {
 				e.printStackTrace();
 			}
-			objMain.add("Extraccion" + extraccionActual, objson);
-			extraccionActual++;
+		}
+		else {
+			try (BufferedReader br = new BufferedReader(new FileReader(previousFile))) {
+				String line;
+				while ((line = br.readLine()) != null) {
+					previousLinks.add(line);
+				}
+				extraccionActual = previousLinks.size() - 1;
+			} catch (FileNotFoundException e) {
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 
@@ -186,7 +257,7 @@ public class ApplicationZenodo {
 			descargados.add(aDescargar);
 			descargarObjeto(pdfUrl,aDescargar,nombreCarpeta);
 		}
-		
+
 		//Image download -- PNG
 		downloadLinks = doc.select("link[rel=alternate][type=image/png]");
 		for (Element element : downloadLinks) {
@@ -205,48 +276,48 @@ public class ApplicationZenodo {
 			descargarObjeto(imageUrl,aDescargar,nombreCarpeta);
 		}
 
-/*
- * Comprobar que el usuario quiere descargar las imagenes y los DOC tambien.
- * Comprobar que estos existen dentro de la URL pasada o SE TE PARA EL PROGRAMA
- */
-//		//Image download -- JPEG
-//		downloadLinks = doc.select("link[rel=alternate][type=image/jpeg]");
-//		for (Element element : downloadLinks) {
-//			element.attr("href");
-//			String imageUrl = element.attr("href");
-//			Pattern pattern = Pattern.compile("files\\/(.*?)");
-//			String aCompilar = driver.getCurrentUrl();
-//			Matcher matcher = pattern.matcher(aCompilar);
-//			if(matcher.find()) {
-//				aDescargar = matcher.group(1);
-//			}
-//			else {
-//				int random = (int )(Math.random() * (this.numeroResultados * 2) + 1);
-//				aDescargar = "ImageZenodo" + random + ".jpeg";
-//			}
-//			descargados.add(aDescargar);
-//			descargarObjeto(imageUrl,aDescargar,nombreCarpeta);
-//		}
-//		
-//		//Word download
-//		downloadLinks = doc.select("link[rel=alternate][type=application/vnd.openxmlformats-officedocument.wordprocessingml.document]");
-//		for (Element element : downloadLinks) {
-//			element.attr("href");
-//			String imageUrl = element.attr("href");
-//			Pattern pattern = Pattern.compile("files\\/(.*?)");
-//			String aCompilar = driver.getCurrentUrl();
-//			Matcher matcher = pattern.matcher(aCompilar);
-//			if(matcher.find()) {
-//				aDescargar = matcher.group(1);
-//			}
-//			else {
-//				int random = (int )(Math.random() * (this.numeroResultados * 2) + 1);
-//				aDescargar = "ImageZenodo" + random + ".docx";
-//			}
-//			descargados.add(aDescargar);
-//			descargarObjeto(imageUrl,aDescargar,nombreCarpeta);
-//		}
-		
+		/*
+		 * Comprobar que el usuario quiere descargar las imagenes y los DOC tambien.
+		 * Comprobar que estos existen dentro de la URL pasada o SE TE PARA EL PROGRAMA
+		 */
+		//		//Image download -- JPEG
+		//		downloadLinks = doc.select("link[rel=alternate][type=image/jpeg]");
+		//		for (Element element : downloadLinks) {
+		//			element.attr("href");
+		//			String imageUrl = element.attr("href");
+		//			Pattern pattern = Pattern.compile("files\\/(.*?)");
+		//			String aCompilar = driver.getCurrentUrl();
+		//			Matcher matcher = pattern.matcher(aCompilar);
+		//			if(matcher.find()) {
+		//				aDescargar = matcher.group(1);
+		//			}
+		//			else {
+		//				int random = (int )(Math.random() * (this.numeroResultados * 2) + 1);
+		//				aDescargar = "ImageZenodo" + random + ".jpeg";
+		//			}
+		//			descargados.add(aDescargar);
+		//			descargarObjeto(imageUrl,aDescargar,nombreCarpeta);
+		//		}
+		//		
+		//		//Word download
+		//		downloadLinks = doc.select("link[rel=alternate][type=application/vnd.openxmlformats-officedocument.wordprocessingml.document]");
+		//		for (Element element : downloadLinks) {
+		//			element.attr("href");
+		//			String imageUrl = element.attr("href");
+		//			Pattern pattern = Pattern.compile("files\\/(.*?)");
+		//			String aCompilar = driver.getCurrentUrl();
+		//			Matcher matcher = pattern.matcher(aCompilar);
+		//			if(matcher.find()) {
+		//				aDescargar = matcher.group(1);
+		//			}
+		//			else {
+		//				int random = (int )(Math.random() * (this.numeroResultados * 2) + 1);
+		//				aDescargar = "ImageZenodo" + random + ".docx";
+		//			}
+		//			descargados.add(aDescargar);
+		//			descargarObjeto(imageUrl,aDescargar,nombreCarpeta);
+		//		}
+
 		return descargados;
 	}
 

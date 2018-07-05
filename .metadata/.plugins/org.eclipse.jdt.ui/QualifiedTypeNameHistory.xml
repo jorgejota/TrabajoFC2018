@@ -1,8 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <qualifiedTypeNameHistroy>
-<fullyQualifiedTypeName name="javax.swing.JOptionPane"/>
-<fullyQualifiedTypeName name="com.tfg.Extraccion.ReadPDF"/>
-<fullyQualifiedTypeName name="net.bytebuddy.dynamic.loading.ClassInjector.UsingLookup.Dispatcher.Creator"/>
 <fullyQualifiedTypeName name="org.openqa.selenium.htmlunit.HtmlUnitDriver"/>
 <fullyQualifiedTypeName name="java.util.logging.Logger"/>
 <fullyQualifiedTypeName name="java.util.logging.Level"/>
@@ -31,7 +28,6 @@
 <fullyQualifiedTypeName name="org.hamcrest.TypeSafeMatcher"/>
 <fullyQualifiedTypeName name="org.apache.http.entity.ContentType"/>
 <fullyQualifiedTypeName name="java.io.InputStream"/>
-<fullyQualifiedTypeName name="java.net.URL"/>
 <fullyQualifiedTypeName name="java.net.ConnectException"/>
 <fullyQualifiedTypeName name="com.tfg.librairy.LibrairyConnection"/>
 <fullyQualifiedTypeName name="com.optimaize.langdetect.i18n.LdLocale"/>
@@ -51,7 +47,6 @@
 <fullyQualifiedTypeName name="java.nio.file.Files"/>
 <fullyQualifiedTypeName name="java.util.List"/>
 <fullyQualifiedTypeName name="java.util.Iterator"/>
-<fullyQualifiedTypeName name="java.util.ArrayList"/>
 <fullyQualifiedTypeName name="com.tfg.mainPackage.RapiditoQueMeVoy"/>
 <fullyQualifiedTypeName name="java.io.File"/>
 <fullyQualifiedTypeName name="java.io.FileWriter"/>
@@ -60,4 +55,9 @@
 <fullyQualifiedTypeName name="com.sun.jersey.api.client.filter.OnStartConnectionListener"/>
 <fullyQualifiedTypeName name="java.io.ByteArrayOutputStream"/>
 <fullyQualifiedTypeName name="javax.servlet.http.Cookie"/>
+<fullyQualifiedTypeName name="java.util.ArrayList"/>
+<fullyQualifiedTypeName name="com.tfg1.Batch.Application"/>
+<fullyQualifiedTypeName name="zenododb.ApplicationZenodo"/>
+<fullyQualifiedTypeName name="alandb.Application"/>
+<fullyQualifiedTypeName name="java.net.URL"/>
 </qualifiedTypeNameHistroy>

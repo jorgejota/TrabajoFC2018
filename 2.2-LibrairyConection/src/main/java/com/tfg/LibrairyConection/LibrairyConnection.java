@@ -16,7 +16,7 @@ import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 
 public class LibrairyConnection {
 
-	public LibrairyConnection(List<String> textos, String stopWords, String typeTopic, String urlTopics, String urlSpace, String user, String password) {
+	public LibrairyConnection(List<String> textos, String stopWords, String typeTopic, String urlTopics, String urlSpace, String user, String password, String correo) {
 		this.textos = textos;
 		mequedo = 0;
 		this.client = Client.create();
@@ -34,7 +34,7 @@ public class LibrairyConnection {
 		this.password = password;
 	}
 
-	public LibrairyConnection(List<String> textos,String typeTopic,String urlTopics, String urlSpace, String user, String password) {
+	public LibrairyConnection(List<String> textos,String typeTopic,String urlTopics, String urlSpace, String user, String password, String correo) {
 		this.textos = textos;
 		mequedo = 0;
 		this.client = Client.create();
@@ -147,7 +147,6 @@ public class LibrairyConnection {
 			this.client = Client.create();
 			client.addFilter(new HTTPBasicAuthFilter(user, password));
 			WebResource webResource = this.client.resource(url);
-			ClientResponse aDevolver;
 			if(input != null) 
 				return webResource.type("application/json").post(ClientResponse.class, input);
 			else
@@ -285,7 +284,7 @@ public class LibrairyConnection {
 		ClientResponse response = manejarCliente(urlTopics + "dimensions",
 				"{ \"parameters\": { "
 						+ "\"language\": \"en\", "
-						+ "\"email\": \"jorgejotahoyo@gmail.com\", "
+						+ "\"email\": \"j.galonso@alumnos.upm.es\", "
 						+ "\"stopwords\": \""+ stopWords +"\" "
 						+ "}}");
 		int status = response.getStatus();

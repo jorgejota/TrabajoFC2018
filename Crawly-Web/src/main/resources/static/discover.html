@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Crawly | UPLOAD</title>
+	<title>Crawly | DISCOVER</title>
 	<link rel="stylesheet" href="css/fontello.css">
+	<link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
 	<link rel="stylesheet" href="css/main.css">
 	<script src="js/jquery-3.3.1.min.js"></script>
-	<link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
 	<style>
 	#porcentajes{
 		display: none;
@@ -34,9 +34,13 @@
 		text-align: center;
 		margin: auto;
 	}
-	#upload-file-message{
+	#uploadMessage{
 		margin: auto;
 		text-align: center;
+	}
+	#upload-file-message{
+		text-align: center;
+		font-size: 25;
 	}
 </style>
 </head>
@@ -63,13 +67,16 @@
 			<form id="upload-file-form">
 				<label for="upload-file-input" class="inputlabel">
 					<i class="icon-pdf"></i>
-					<span id="label-span"><u>Choose file</u></span>
+					<span id="label-span"><u>Choose file*</u></span>
 				</label>
-				<input id="upload-file-input" accept=".pdf" type="file" name="uploadfile" accept="*" />
+				<input id="upload-file-input" accept=".pdf" type="file" name="uploadfile" />
 			</form>
+			<span id="informationEnglish">*The pdf file needs to be written in English</span>
 		</div>
 	</div>
-	<span id="upload-file-message" class="py-8"></span>
+	<div id="uploadMessage">
+		<span id="upload-file-message" class="py-8" style="color:red"></span>
+	</div>
 	<div id="cargaModelo">
 		<h3 id="relevant"> Detecting if your PDF is relevant ... </h3>
 		<div id="preloader_1">

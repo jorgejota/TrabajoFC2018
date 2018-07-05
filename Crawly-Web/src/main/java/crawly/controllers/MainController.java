@@ -64,11 +64,11 @@ public class MainController {
 		}
 		return null;
 	}
-			
+
 	@RequestMapping(value = "/checkPDF", method = RequestMethod.GET)
 	@ResponseBody
 	public Response checkPDF(
-			@RequestParam("checkPDF") MultipartFile[] multipartFile,
+			@RequestParam("pdfToUpload") MultipartFile uploadfile,
 			@RequestParam("modePDF") String modePDF,
 			@RequestParam("fixPDF") String fixTextString,
 			@RequestParam("allResources") String allResourcesString,
@@ -80,52 +80,52 @@ public class MainController {
 		String filepath = "";
 		String rutaOutputFolder = env.getProperty("crawly.paths.pdfFiles");
 		File outputfolder = new File(rutaOutputFolder);
-		for (MultipartFile uploadfile : multipartFile) {
-			List<RangeExtraction> numerosMarcadores = new ArrayList<>();
-			List<RangeExtraction> numerosPaginas = new ArrayList<>();
-			try {
-				String filename = uploadfile.getOriginalFilename();
-				filepath = Paths.get(crearArchivo(filename,"crawly.paths.pdfFiles")).toString();
-				File miArchivo = new File(filepath);
-				BufferedOutputStream stream = new BufferedOutputStream(new FileOutputStream(miArchivo));
-				stream.write(uploadfile.getBytes());
-				stream.close();
-				ExtractionMode modoExtraccion = ExtractionMode.COMPLETE;
-				if(modePDF=="butPages") {
-					modoExtraccion = ExtractionMode.PAGES;
-					numerosPaginas = comprobacionDeArgumentos(importantNumbers);
-				}
-				if(modePDF=="butBook") {
-					modoExtraccion = ExtractionMode.BOOKMARK;
-					numerosMarcadores = comprobacionDeArgumentos(importantNumbers);
-				}
-				String rutaCarpeta = new ReadPDF(miArchivo,modoExtraccion,numerosMarcadores,numerosPaginas,fixText,outputfolder,false).run();
-				ByteArrayOutputStream baos = new ByteArrayOutputStream();
-				FileOutputStream fos = new FileOutputStream(rutaOutputFolder + "\\download.zip");
-				ZipOutputStream zos = new ZipOutputStream(fos);
-				addToZipFile(rutaCarpeta, zos);
-				zos.close();
-				fos.close();
-				byte[] enviar = convertToArrayByte(rutaOutputFolder + "\\download.zip");
-		        Cookie cookie = new Cookie("fileDownload", "true");
-		        cookie.setPath("/");
-		        httpServletResponse.addCookie(cookie);
-		        httpServletResponse.setContentType("application/zip");
-		        httpServletResponse.setHeader("Content-Disposition", "attachment;filename=files.zip");
-		        httpServletResponse.getOutputStream().write(enviar);
-			}catch (Exception e) {
-				File borrar = new File(filepath);
-				if(borrar.exists())
-					borrar.delete();
-				System.out.println(e.getMessage());
-				//return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-				return new Response("Bad Request ", null, 1);
+
+		List<RangeExtraction> numerosMarcadores = new ArrayList<>();
+		List<RangeExtraction> numerosPaginas = new ArrayList<>();
+		try {
+			String filename = uploadfile.getOriginalFilename();
+			filepath = Paths.get(crearArchivo(filename,"crawly.paths.pdfFiles")).toString();
+			File miArchivo = new File(filepath);
+			BufferedOutputStream stream = new BufferedOutputStream(new FileOutputStream(miArchivo));
+			stream.write(uploadfile.getBytes());
+			stream.close();
+			ExtractionMode modoExtraccion = ExtractionMode.COMPLETE;
+			if(modePDF=="butPages") {
+				modoExtraccion = ExtractionMode.PAGES;
+				numerosPaginas = comprobacionDeArgumentos(importantNumbers);
 			}
+			if(modePDF=="butBook") {
+				modoExtraccion = ExtractionMode.BOOKMARK;
+				numerosMarcadores = comprobacionDeArgumentos(importantNumbers);
+			}
+			String rutaCarpeta = new ReadPDF(miArchivo,modoExtraccion,numerosMarcadores,numerosPaginas,fixText,outputfolder,false).run();
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			FileOutputStream fos = new FileOutputStream(rutaOutputFolder + "\\download.zip");
+			ZipOutputStream zos = new ZipOutputStream(fos);
+			addToZipFile(rutaCarpeta, zos);
+			zos.close();
+			fos.close();
+			byte[] enviar = convertToArrayByte(rutaOutputFolder + "\\download.zip");
+			Cookie cookie = new Cookie("fileDownload", "true");
+			cookie.setPath("/");
+			httpServletResponse.addCookie(cookie);
+			httpServletResponse.setContentType("application/zip");
+			httpServletResponse.setHeader("Content-Disposition", "attachment;filename=files.zip");
+			httpServletResponse.getOutputStream().write(enviar);
+		}catch (Exception e) {
+			File borrar = new File(filepath);
+			if(borrar.exists())
+				borrar.delete();
+			System.out.println(e.getMessage());
+			//return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+			return new Response("BAD REQUEST", null, 1);
 		}
+
 		return null;
 	} 
 
-	@RequestMapping(value = "/makeModel", method = RequestMethod.GET)
+	@RequestMapping(value = "/makeModel", method = RequestMethod.POST)
 	@ResponseBody
 	public Response makeModel(@RequestParam("urlLibrairy") String urlLibrairy,
 			@RequestParam("user") String user,
@@ -133,7 +133,7 @@ public class MainController {
 			@RequestParam("topic") String topic,
 			@RequestParam("correo") String correo,
 			@RequestParam("nDocuments") String nDocuments) {
-		
+
 		return null;
 	}
 
@@ -141,7 +141,6 @@ public class MainController {
 	@ResponseBody
 	public Response uploadFile(
 			@RequestParam("uploadfile") MultipartFile uploadfile) {
-		System.out.println("Llegamos a entrar aqui");
 		double[] respuesta = null;
 		String filepath = "";
 		try {
@@ -153,9 +152,9 @@ public class MainController {
 			stream.close();
 			String textoAPasar = leemosElPDF(filepath);
 			if(textoAPasar == null)
-				return new Response("It is not possible to read the pdf", respuesta, 1);
+				return new Response("IT IS NOT POSSIBLE TO READ THE PDF", respuesta, 1);
 			if(!textoIngles(textoAPasar)) {
-				return new Response("The PDF is not in English or does not contain enough information", respuesta, 1);
+				return new Response("THE PDF IS NOT IN ENGLISH OR DOES NOT CONTAIN ENOUGHT INFORMATION", respuesta, 1);
 			}
 			respuesta = comprobarArchivo(filepath);
 			if(miArchivo.delete()){
@@ -170,12 +169,12 @@ public class MainController {
 				borrar.delete();
 			System.out.println(e.getMessage());
 			//return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-			return new Response("Bad Request ", null, 1);
+			return new Response("BAD REQUEST", null, 1);
 		}
 		if(respuesta == null) {
-			return new Response("Bad Request ", respuesta, 1);
+			return new Response("BAD REQUEST", respuesta, 1);
 		}
-		return new Response("Done ", respuesta, 0);
+		return new Response("DONE", respuesta, 0);
 	} 
 
 	private String leemosElPDF(String filepath) {
@@ -208,9 +207,8 @@ public class MainController {
 			TextObject textObject = textObjectFactory.forText(myTexto);
 			Optional<LdLocale> lang = languageDetector.detect(textObject);
 			String resultado = lang.toString();
-			System.out.println("Que me dice el texto " + resultado);
 			String elverdad = resultado.substring(resultado.length()-3, resultado.length()-1);
-			if(elverdad.equals("en") || elverdad.equals("en"))
+			if(elverdad.equals("en") || resultado.equals("Optional.absent()"))
 				return true;
 		} catch (IOException e) {
 			e.printStackTrace();

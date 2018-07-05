@@ -2,20 +2,20 @@
 <section name="Workbench">
 	<section name="org.eclipse.ui.texteditor.FindReplaceDialog">
 		<item value="false" key="isRegEx"/>
-		<item value="listaTexto" key="selection"/>
+		<item value="fixearString" key="selection"/>
 		<item value="false" key="casesensitive"/>
 		<item value="false" key="incremental"/>
 		<item value="true" key="wrap"/>
 		<item value="false" key="wholeword"/>
 		<list key="findhistory">
-			<item value="listaTexto"/>
-			<item value="textoIngles"/>
-			<item value="outputfolderoutputfolder"/>
-			<item value="onlyText"/>
-			<item value="fixText"/>
-			<item value="form-data@RequestMapping(value = &quot;/download&quot;, method = RequestMethod.GET)"/>
-			<item value="math"/>
-			<item value="Vamos al shape"/>
+			<item value="stopwords"/>
+			<item value="fixearString"/>
+			<item value="extractDarksky"/>
+			<item value="objson"/>
+			<item value="parameters"/>
+			<item value="previousFile"/>
+			<item value="main"/>
+			<item value="sp"/>
 		</list>
 		<list key="replacehistory">
 			<item value=""/>

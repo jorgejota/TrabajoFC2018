@@ -1,41 +1,58 @@
 package com.tfg1.Batch;
 
-import java.io.File;
-import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.util.List;
 
-import org.springframework.boot.ApplicationArguments;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+
+import com.google.gson.JsonObject;
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
+
+import alandb.Application;
+import zenododb.ApplicationZenodo;
 
 @Component
 public class BatchDiario {
 
-	//@Scheduled(fixedDelay=5000)
-	//second, minute, hour, day of month, month, day(s) of week
-	//@Scheduled(cron = "0 0 12 * * ?")
-	public void ejecutarSiempre(ApplicationArguments args) {
-		System.out.println(args.getOptionNames());
-//		String rutaCarpeta = "C:\\Users\\jorge\\Desktop\\DownloadPDF";
-//		File carpetaPDF = new File(rutaCarpeta);
-//		creacionCarpeta(carpetaPDF);
+	@Scheduled(cron = "0 0 12 * * ?")
+	public void ejecutarAhora() {
+		String owner_org = "librAly";
+		String api_key = "8192c248-e5f6-4403-8443-20252234487b";
+		//TODO cambiar URL
+		String urlSubida = "http://demo.ckan.org/api/3/action/dashboard_activity_list";
+		//TODO cambiar carpeta
+		List<JsonObject> jsonZenodo = new ApplicationZenodo("//", "light pollution", true, true).extractAllJson();
+		List<JsonObject> jsonAlan = new Application("//", "", true, true).extractAllJson();
+		for (JsonObject jsonObject : jsonAlan) {
+			String titulo = jsonObject.get("titulo").toString();
+			String notas = jsonObject.toString();
+			//TODO manejar el input	
+			String input = createInput(titulo,notas,owner_org);
+			ClientResponse response = manejarCliente(urlSubida);
+		}
+		for (JsonObject jsonObject : jsonAlan) {
+			String titulo = jsonObject.get("titulo").toString();
+			String notas = jsonObject.toString();
+			String input = createInput(titulo,notas,owner_org);
+			ClientResponse response = manejarCliente(urlSubida);
+		}
+
+	}
+	private ClientResponse manejarCliente(String url) {
+		//TODO poner la Api Key
+		Client client = Client.create();
+		client.addFilter(new HTTPBasicAuthFilter("jgalan", "librairy"));
+		WebResource webResource = client.resource(url);
+		return webResource.type("application/json").post(ClientResponse.class);
+	}
+	private String createInput(String name, String notes, String owner_org) {
+		return "{  \"name\": \""+name+"\",  "
+				+ "\"notes\": "+notes+",  "
+				+ "\"owner_org\": \""+owner_org+"\"}";
 	}
 
-	@Scheduled(fixedDelay=5000)
-	public void ejecutarAhora() {
-		System.out.println("Viva España");
-	}
-	public void creacionCarpeta(File file) {
-		if(!file.exists()) {
-			try {
-				if (!file.createNewFile()) {
-					System.out.println("ERROR al crear la carpeta " + file.getAbsolutePath());
-					System.exit(1);
-				}
-			} catch (IOException ioe) {
-				System.out.println("ERROR al crear la carpeta " + file.getAbsolutePath());
-				ioe.printStackTrace();
-				System.exit(1);
-			}
-		}
-	}
 }

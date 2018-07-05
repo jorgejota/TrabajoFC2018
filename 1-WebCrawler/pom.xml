@@ -4,13 +4,11 @@
 	<groupId>com.tfg</groupId>
 	<artifactId>Crawler</artifactId>
 	<version>1.0</version>
-
 	<properties>
 		<jdk.version>1.8</jdk.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
 	<dependencies>
-
 		<dependency>
 			<groupId>org.seleniumhq.selenium</groupId>
 			<artifactId>selenium-java</artifactId>
@@ -92,8 +90,10 @@
 							<includeEmptyDirs>true</includeEmptyDirs>
 							<resources>
 								<resource>
-									<directory>${basedir}/src/main/resources</directory>
-									<filtering>false</filtering>
+									<directory>/</directory>
+									<includes>
+										<include>chromedriver.exe</include>
+									</includes>
 								</resource>
 							</resources>
 						</configuration>

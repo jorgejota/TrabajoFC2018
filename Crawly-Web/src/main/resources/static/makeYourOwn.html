@@ -17,6 +17,10 @@
 		-webkit-animation: spin 2s linear infinite; /* Safari */
 		animation: spin 2s linear infinite;
 	}
+	#desaparecer{
+		width: 70%;
+
+	}
 </style>
 </head>
 <body>
@@ -34,11 +38,11 @@
 		</div>
 	</header>
 	<div id="desaparecer" class="container">
-		<h2>Fill in the data</h2>
+		<h2 class="py-3">Fill in the data</h2>
 		<form accept-charset=utf-8 onsubmit="crearLibreria()">
 			<div class="form-group">
 				<label for="url">Librairy URL:</label>
-				<input type="text" class="form-control" id="url" placeholder="Enter url" name="url" required>
+				<input type="url" class="form-control" id="url" placeholder="Enter url" name="url" required>
 			</div>
 			<div class="form-group">
 				<label for="user">User:</label>
@@ -80,6 +84,7 @@
 			var nDocuments = document.getElementById("number").value;
 			uploadFile(url,user,topic,password,email,nDocuments);
 		}
+
 		function uploadFile(url,user,topic,password,email,nDocuments) {
 			console.log("Entramos");
 			$.ajax({
@@ -98,7 +103,7 @@
 				},
 				error: function (response) {
 					document.getElementById("myLoader2").style.display="none";
-					document.getElementById('ponerAlgoAqui').innerHTML="An error has ocurred";
+					document.getElementById('ponerAlgoAqui').innerHTML=response.message;
 				}
 			});
 		} 

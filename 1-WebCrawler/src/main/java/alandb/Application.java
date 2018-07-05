@@ -31,12 +31,25 @@ public class Application {
 		this.nombreDirectorio = nombreDirectorio;
 		this.palabraBuscar = keyWords;
 		this.allJoin = allJoin;
+		this.previousLinks = new ArrayList<>();
 	}
+	
+	//Constructor utilizado para CKAN
+	public Application(String nombreDirectorio, String keyWords, boolean allJoin, boolean json) {
+		this.nombreDirectorio = nombreDirectorio;
+		this.palabraBuscar = keyWords;
+		this.allJoin = allJoin;
+		this.previousLinks = new ArrayList<>();
+		this.json = json;
+	}
+	
 	public Application(String nombreDirectorio, String keyWords) {
 		this.nombreDirectorio = nombreDirectorio;
 		this.palabraBuscar = keyWords;
 		this.allJoin = false;
+		this.previousLinks = new ArrayList<>();
 	}
+	
 
 	public JsonObject objMain;
 	public Integer numero = 0;
@@ -48,11 +61,23 @@ public class Application {
 	public boolean allJoin;
 	public File previousFile;
 	public List<String> previousLinks;
-
+	
+	//Para CKAN
+	public boolean json;
+	public List<JsonObject> listaJson;
+	
+	public List<JsonObject> extractAllJson(){
+		listaJson = new ArrayList<>();
+		run();
+		return listaJson;
+	}
+	
 	public void run() {
+		java.util.logging.Logger.getLogger("org.apache.pdfbox").setLevel(java.util.logging.Level.SEVERE);
 		objMain = new JsonObject();
 		loadPreviousDownloads();
-		System.setProperty("webdriver.chrome.driver", "src/main/resources/chromedriver.exe");
+		System.setProperty("basedir", "user.dir");
+		System.setProperty("webdriver.chrome.driver", "chromedriver.exe");
 		String url = "http://alandb.darksky.org/";
 		ChromeOptions options = new ChromeOptions();
 		options.addArguments("--start-maximized");
@@ -101,7 +126,6 @@ public class Application {
 
 	public void loadPreviousDownloads(){
 		previousFile = new File(nombreDirectorio + "\\DOWNLOADURLs.txt");
-		previousLinks = new ArrayList<>();
 		if(!previousFile.exists()) {
 			try {
 				previousFile.createNewFile();
@@ -225,6 +249,8 @@ public class Application {
 						tryExtract(nombreCarpeta);
 					}
 				}
+				if(this.json)
+					this.listaJson.add(objson);
 				extraccionActual++;
 				previousLinks.add(k);
 				try {
@@ -236,6 +262,7 @@ public class Application {
 			}
 		});
 	}
+	
 	public boolean avanzar(){
 		try {
 			driver.findElement(By.xpath("//a[contains(@title,'display next results page')]")).click();

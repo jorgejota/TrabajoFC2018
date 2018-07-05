@@ -56,6 +56,7 @@ public class ExecuteAll {
 		String urlSpace = "";
 		String palabraClaveDescargar = "";
 		String stopWords = "";
+		String correo = "";
 		int numeroDePdf = 0;
 		try {
 			CommandLine line = parser.parse(buildOptions(), args);
@@ -88,8 +89,8 @@ public class ExecuteAll {
 			if(line.hasOption('n')) {
 				numeroDePdf = Integer.parseInt(line.getOptionValue('n'));
 			}
-			if(line.hasOption('s')) {
-				stopWords = leoDeArchivo(line.getOptionValue('s'));
+			if(line.hasOption('c')) {
+				correo = leoDeArchivo(line.getOptionValue('s'));
 			}
 		}
 		catch (ParseException exp) {
@@ -134,7 +135,7 @@ public class ExecuteAll {
 			}
 		}
 		//TODO cambiar otra vez a LibrairyConnection paraUsar = new LibrairyConnection(listaTexto,stopWords,keyWord,urlTopics,urlSpace,user,password);
-		LibrairyConnection paraUsar = new LibrairyConnection(listaTextoEnString,stopWords,keyWord,urlTopics,urlSpace,user,password);
+		LibrairyConnection paraUsar = new LibrairyConnection(listaTextoEnString,stopWords,keyWord,urlTopics,urlSpace,user,password,correo);
 		if(mode.equals("COMPROBAR")) {
 			LibrairyConnection paraComprobar = new LibrairyConnection(keyWord,urlTopics,urlSpace,user,password);
 			for (int i = 0; i < listaTexto.size(); i++) {
@@ -183,7 +184,7 @@ public class ExecuteAll {
 				System.out.println();
 				losElegidos.add(vivaespana.getTexto());
 			}
-			paraUsar = new LibrairyConnection(losElegidos,stopWords,keyWord,urlTopics,urlSpace,user,password);
+			paraUsar = new LibrairyConnection(losElegidos,stopWords,keyWord,urlTopics,urlSpace,user,password,correo);
 			System.out.println("Procedemos a construir los puntos");
 			paraUsar.entrenarModelo();
 			System.exit(0);
@@ -297,18 +298,11 @@ public class ExecuteAll {
 				.hasArg()
 				.argName("Ruta de vectores")
 				.build());
-		o.addOption(Option.builder("s")
-				.longOpt("stopwords")
-				.desc("Link a un fichero con las palabras separadas por espacios en una misma linea."
-						+ "Ej:none conexion everything")
+		o.addOption(Option.builder("c")
+				.longOpt("correo")
+				.desc("Direccion de correo electronico en la que notificar al usuario de la contruccion de temas")
 				.hasArg()
-				.argName("Ruta de vectores")
-				.build());
-		o.addOption(Option.builder("d")
-				.longOpt("download")
-				.desc("¡EN EL JAR NO FUNCIONA!")
-				.hasArg()
-				.argName("Palabra clave a descargar")
+				.argName("correo")
 				.build());
 		return o;
 	}

@@ -86,7 +86,7 @@
 					<target>1.8</target>
 					<archive>
 						<manifest>
-							<mainClass>com.tfg.mainPackage.ExecuteAll</mainClass>
+							<mainClass>com.tfg.Extraccion.MainClass</mainClass>
 						</manifest>
 					</archive>
 				</configuration>
@@ -96,7 +96,7 @@
 				<configuration>
 					<archive>
 						<manifest>
-							<mainClass>com.tfg.mainPackage.ExecuteAll</mainClass>
+							<mainClass>com.tfg.Extraccion.MainClass</mainClass>
 						</manifest>
 					</archive>
 					<descriptorRefs>
